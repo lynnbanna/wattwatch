@@ -30,12 +30,12 @@ Goal: running app, repository, architecture, validated data strategy.
 Goal: an uploaded image is processed by a baseline model.
 
 - [ ] Collect a small, legally usable dataset of rooftop images + annotations
-- [ ] Choose one segmentation model and a narrow obstacle-detection approach
+- [x] Choose one segmentation model and a narrow obstacle-detection approach → [MODEL_DECISION.md](MODEL_DECISION.md)
 - [ ] Preprocessing and inference scripts
 - [ ] Separate evaluation set, never used for tuning
 - [ ] Measure segmentation quality (IoU) and detection precision/recall
-- [ ] FastAPI inference endpoint
-- [ ] Frontend shows uploaded image + prediction overlay
+- [x] FastAPI inference endpoint (stub model until training lands)
+- [x] Frontend shows uploaded image + prediction overlay
 
 **Done when:** upload an image and view an overlay; baseline metrics recorded.
 
@@ -43,6 +43,7 @@ Goal: an uploaded image is processed by a baseline model.
 Goal: usable-area estimate with clear limitations.
 
 - [ ] Image validation, resizing, coordinate handling
+- [ ] Require top-down (nadir) imagery: explain in the upload flow; warn on likely oblique photos
 - [ ] Scale input or georeferenced-imagery workflow
 - [ ] Roof area from calibrated pixel measurements
 - [ ] Subtract obstacles; configurable clearance margins
