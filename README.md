@@ -43,7 +43,7 @@ uvicorn app.main:app --reload
 pytest
 ```
 
-**Frontend** (Node 20+ recommended):
+**Frontend** (Node 20+ required):
 ```bash
 cd frontend
 npm install
