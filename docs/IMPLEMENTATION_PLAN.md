@@ -16,7 +16,7 @@ configure solar and battery → compare costs and savings → save or share a re
 Goal: running app, repository, architecture, validated data strategy.
 
 - [x] One-page PRD and main user journey → [PRD.md](PRD.md)
-- [ ] GitHub repository + issue board *(repo live at github.com/lynnbanna/wattwatch; issue board still to set up)*
+- [x] GitHub repository + issue board → [repo](https://github.com/lynnbanna/wattwatch), [project board](https://github.com/users/lynnbanna/projects/1)
 - [x] README and branching conventions → [README.md](../README.md), [CONTRIBUTING.md](CONTRIBUTING.md)
 - [x] Next.js + TypeScript + Tailwind CSS → `frontend/`
 - [x] Python + FastAPI + PostgreSQL → `backend/`, `docker-compose.yml`
