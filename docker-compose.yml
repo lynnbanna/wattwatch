@@ -34,6 +34,7 @@ services:
     build: ./frontend
     environment:
       NEXT_PUBLIC_API_URL: http://localhost:8000
+      WATCHPACK_POLLING: "true"  # detect file changes on Windows/macOS bind mounts
     ports:
       - "3000:3000"
     volumes:

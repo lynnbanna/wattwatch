@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { ApiStatus } from "@/components/ApiStatus";
 
 const journey = [
@@ -19,6 +20,13 @@ export default function Home() {
         Rooftop computer vision, solar estimation, and household energy
         financial modeling, with every assumption shown.
       </p>
+
+      <Link
+        href="/analyze"
+        className="mt-6 inline-block rounded-md bg-teal-700 px-4 py-2 font-medium text-white hover:bg-teal-800"
+      >
+        Analyze a roof
+      </Link>
 
       <section className="mt-10">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-teal-700">
