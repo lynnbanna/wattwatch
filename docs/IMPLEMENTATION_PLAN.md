@@ -22,7 +22,7 @@ Goal: running app, repository, architecture, validated data strategy.
 - [x] Python + FastAPI + PostgreSQL → `backend/`, `docker-compose.yml`
 - [x] Docker Compose for local development
 - [x] API conventions, env vars, logging, initial tests → [API_CONVENTIONS.md](API_CONVENTIONS.md)
-- [ ] Research rooftop datasets, usage rights, labels, coverage → [DATA_PLAN.md](DATA_PLAN.md) *(candidates listed; licenses to verify)*
+- [x] Research rooftop datasets, usage rights, labels, coverage → [DATA_PLAN.md](DATA_PLAN.md)
 
 **Done when:** local frontend and API run; database connection succeeds; data plan documented.
 
