@@ -14,6 +14,9 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
     database_url: str = "postgresql+psycopg://wattwatch:wattwatch@localhost:5432/wattwatch"
     cors_origins: list[str] = ["http://localhost:3000"]
+    max_upload_bytes: int = 10 * 1024 * 1024
+    max_image_pixels: int = 40_000_000
+    vision_model: str = "stub"
 
 
 @lru_cache

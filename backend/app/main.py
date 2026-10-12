@@ -8,6 +8,7 @@ from fastapi.responses import JSONResponse
 
 from app.api.v1 import router as v1_router
 from app.core.config import get_settings
+from app.core.errors import register_error_handlers
 from app.core.logging import configure_logging
 
 logger = logging.getLogger("wattwatch.api")
@@ -42,6 +43,8 @@ def create_app() -> FastAPI:
             },
         )
         return response
+
+    register_error_handlers(app)
 
     @app.exception_handler(Exception)
     async def unhandled_error(request: Request, exc: Exception) -> JSONResponse:
