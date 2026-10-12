@@ -1,5 +1,5 @@
 # Development image used by docker-compose. A production image is a Week 7 task.
-FROM node:20-alpine
+FROM node:22-alpine
 
 WORKDIR /app
 COPY package.json package-lock.json ./
