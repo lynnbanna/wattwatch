@@ -56,5 +56,6 @@ npm test
 - [Implementation plan](docs/IMPLEMENTATION_PLAN.md)
 - [Product requirements](docs/PRD.md)
 - [Data plan](docs/DATA_PLAN.md)
+- [Model decision](docs/MODEL_DECISION.md)
 - [API conventions](docs/API_CONVENTIONS.md)
 - [Contributing & branching](docs/CONTRIBUTING.md)
