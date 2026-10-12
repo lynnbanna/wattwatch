@@ -19,11 +19,24 @@
 | `CORS_ORIGINS` | api | `["http://localhost:3000"]` |
 | `LOG_LEVEL` | api | `INFO` |
 | `ENVIRONMENT` | api | `development` |
+| `MAX_UPLOAD_BYTES` | api | `10485760` (10 MB) |
+| `MAX_IMAGE_PIXELS` | api | `40000000` |
+| `VISION_MODEL` | api | `stub` |
 | `NEXT_PUBLIC_API_URL` | web | `http://localhost:8000` |
 
 ## Current endpoints
 | Method | Path | Description |
 |---|---|---|
 | GET | `/api/v1/health` | API status, version, database reachability |
+| POST | `/api/v1/roof-analysis` | Multipart `file` (PNG/JPEG). Returns roof and obstacle polygons in image pixels with confidence, model info, and limitations |
+
+## Upload errors
+| Status | Code | When |
+|---|---|---|
+| 413 | `file_too_large` | File exceeds `MAX_UPLOAD_BYTES` |
+| 413 | `image_too_large` | Width × height exceeds `MAX_IMAGE_PIXELS` |
+| 415 | `unsupported_file_type` | Content is not a PNG or JPEG (the declared type is not trusted) |
+| 400 | `invalid_image` | Image data is corrupt or truncated |
+| 422 | `invalid_request` | Missing or malformed fields |
 
 Interactive docs: `http://localhost:8000/docs` when the API is running.
