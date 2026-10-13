@@ -32,7 +32,7 @@ Goal: an uploaded image is processed by a baseline model.
 - [ ] Collect a small, legally usable dataset of rooftop images + annotations
 - [x] Choose one segmentation model and a narrow obstacle-detection approach → [MODEL_DECISION.md](MODEL_DECISION.md)
 - [ ] Preprocessing and inference scripts
-- [ ] Separate evaluation set, never used for tuning
+- [x] Separate evaluation set, never used for tuning → region-based RID2 split (`data/splits/rid2_split_v1.csv`); Lebanese set pending hand labels
 - [ ] Measure segmentation quality (IoU) and detection precision/recall
 - [x] FastAPI inference endpoint (stub model until training lands)
 - [x] Frontend shows uploaded image + prediction overlay

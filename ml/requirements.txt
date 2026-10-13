@@ -1,0 +1,8 @@
+# Training and evaluation. Install PyTorch from the CUDA index first, e.g.:
+#   pip install torch==2.14.1 torchvision==0.29.1 --index-url https://download.pytorch.org/whl/cu130
+segmentation-models-pytorch==0.5.0
+numpy==2.5.2
+pandas==3.0.6
+pillow==12.3.0
+rasterio==1.5.2
+tqdm==4.70.1

@@ -1,0 +1,5 @@
+# Lightweight set for CI: data helpers and tests, no PyTorch.
+numpy==2.5.2
+pillow==12.3.0
+pytest==9.1.1
+ruff==0.17.0
