@@ -1,0 +1,36 @@
+{
+  "csv": "rid2_split_v1.csv",
+  "sha256": "18e143ed0485ef2b8ee2524a13ef757ab2ca44cf95330178066075949bb43e91",
+  "seed": 42,
+  "region_link_distance_m": 1000,
+  "regions": 48,
+  "tiles": {
+    "train": 3326,
+    "val": 714,
+    "test": 724
+  },
+  "regions_per_split": {
+    "train": 35,
+    "val": 5,
+    "test": 8
+  },
+  "min_test_to_train_distance_m": 1181,
+  "min_val_to_train_distance_m": 1444,
+  "class_pixel_share": {
+    "train": {
+      "background": 0.805,
+      "roof": 0.1722,
+      "obstacle": 0.0229
+    },
+    "val": {
+      "background": 0.7772,
+      "roof": 0.1925,
+      "obstacle": 0.0303
+    },
+    "test": {
+      "background": 0.8487,
+      "roof": 0.1376,
+      "obstacle": 0.0137
+    }
+  }
+}

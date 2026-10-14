@@ -1,0 +1,2 @@
+# Split manifests are hashed; keep their bytes identical on every OS.
+data/splits/** text eol=lf

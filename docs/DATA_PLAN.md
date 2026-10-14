@@ -74,6 +74,12 @@ regional roofs.
   and excluded from any commercial build. Limitation to document: Beirut-only
   coverage.
 
+## Splits
+- **RID2:** frozen region-based split `data/splits/rid2_split_v1.csv` (48 regions; train 3,326 /
+  val 714 / test 724 tiles; seed 42). The official RID2 split is not used because 520 of its
+  952 test tiles are directly adjacent to training tiles. Details: [ml/README.md](../ml/README.md).
+- **Lebanese regional set:** evaluation only, built from hand labels (see Decisions).
+
 ## Rules
 - Record source, license, download date, and attribution for every dataset in `data/SOURCES.md`.
 - Raw data lives in `data/raw/` (git-ignored); only small fixtures go in git.
