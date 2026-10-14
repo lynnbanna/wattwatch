@@ -30,6 +30,7 @@
 |---|---|---|
 | GET | `/api/v1/health` | API status, version, database reachability |
 | POST | `/api/v1/roof-analysis` | Multipart: `file` (PNG/JPEG), `imagery_type` (`top_down` required), scale as `gsd_m` **or** `reference_x1/y1/x2/y2` + `reference_length_m`, optional `edge_setback_m` (default 0.5) and `obstacle_clearance_m` (default 0.3). Returns roof/obstacle polygons in original image pixels with `model_score`, areas in m², usable area, scale info, assumptions and limitations |
+| POST | `/api/v1/roof-measurements` | JSON: `gsd_m`, `roofs` and `obstacles` (lists of `[x, y]` pixel polygons, 3-2,000 points, up to 500 each), optional `edge_setback_m`, `obstacle_clearance_m`. Returns per-region and total areas with assumptions, using the same geometry as `/roof-analysis` (used after manual correction). 422 `invalid_polygon` for too few or too many points |
 
 ## Model scores
 `model_score` (0-1) is the model's mean pixel score over a region. It is **not** a probability that the outline is correct and is not calibrated; the API returns an explanatory `model_score_note` with every analysis.

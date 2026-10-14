@@ -129,3 +129,34 @@ export async function analyzeRoof(
   }
   return res.json();
 }
+
+export type RoofMeasurementsResponse = {
+  roofs: { area_m2: number; usable_area_m2: number }[];
+  obstacles: { area_m2: number }[];
+  measurements: RoofAnalysisResponse["measurements"];
+  assumptions: string[];
+};
+
+/** Recompute areas for (corrected) outlines with the same geometry as the analysis. */
+export async function measureRoofs(
+  body: {
+    gsd_m: number;
+    roofs: Point[][];
+    obstacles: Point[][];
+    edge_setback_m: number;
+    obstacle_clearance_m: number;
+  },
+  signal?: AbortSignal,
+): Promise<RoofMeasurementsResponse> {
+  const res = await fetch(apiUrl("roof-measurements"), {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+    signal,
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => null);
+    throw new Error(apiErrorMessage(res.status, data));
+  }
+  return res.json();
+}
