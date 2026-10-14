@@ -9,7 +9,7 @@ configure solar and battery → compare costs and savings → save or share a re
 Estimates are explainable by design: every number is shown with its
 assumptions, confidence, and limitations.
 
-> Status: **Week 1 — foundation.** See [docs/IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md).
+> Status: **Week 3 — pixels to rooftop measurements.** See [docs/IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md).
 
 ## Repository layout
 ```

@@ -68,17 +68,20 @@ regional roofs.
   - Later candidates: `stairwell_bulkhead`, `hvac_unit`, `pv_module`.
   - Neither class exists in RID2, so these need hand labels; RID2's
     superstructure classes can be used for pretraining.
-- **Decided — held-out evaluation set:** hand-labelled tiles from the CC BY 4.0
-  Beirut orthophoto, spatially separated from any training tiles. Optional
-  non-commercial tier from the CC BY-NC Beirut scenes, kept in its own folder
-  and excluded from any commercial build. Limitation to document: Beirut-only
-  coverage.
+- **Revised 2026-10-14 — held-out evaluation set:** the original plan was hand-labelled
+  tiles from the CC BY 4.0 Beirut orthophoto. On download it turned out to cover only the
+  port blast zone (warehouses, silos, containers, crater) with **no residential roofs,
+  water tanks or solar water heaters**, so it is unsuitable. The held-out set is the
+  region-based RID2 test split for now. A Lebanese regional set will be built from our own
+  drone imagery with building owners' permission ([#20](https://github.com/lynnbanna/wattwatch/issues/20)).
+  The CC BY-NC satellite scenes (0.42–0.63 m) remain an option for a roof-only check but
+  are not used.
 
 ## Splits
 - **RID2:** frozen region-based split `data/splits/rid2_split_v1.csv` (48 regions; train 3,326 /
   val 714 / test 724 tiles; seed 42). The official RID2 split is not used because 520 of its
   952 test tiles are directly adjacent to training tiles. Details: [ml/README.md](../ml/README.md).
-- **Lebanese regional set:** evaluation only, built from hand labels (see Decisions).
+- **Lebanese regional set:** not yet available; evaluation only once built ([#20](https://github.com/lynnbanna/wattwatch/issues/20)).
 
 ## Rules
 - Record source, license, download date, and attribution for every dataset in `data/SOURCES.md`.

@@ -12,7 +12,7 @@ configure solar and battery → compare costs and savings → save or share a re
 
 ---
 
-## Week 1 — Foundation (in progress)
+## Week 1 — Foundation (done)
 Goal: running app, repository, architecture, validated data strategy.
 
 - [x] One-page PRD and main user journey → [PRD.md](PRD.md)
@@ -26,10 +26,10 @@ Goal: running app, repository, architecture, validated data strategy.
 
 **Done when:** local frontend and API run; database connection succeeds; data plan documented.
 
-## Week 2 — Computer vision baseline
+## Week 2 — Computer vision baseline (done)
 Goal: an uploaded image is processed by a baseline model.
 
-- [ ] Collect a small, legally usable dataset of rooftop images + annotations
+- [x] Collect a small, legally usable dataset of rooftop images + annotations → RID2 (CC BY 4.0); Lebanese set deferred to [#20](https://github.com/lynnbanna/wattwatch/issues/20)
 - [x] Choose one segmentation model and a narrow obstacle-detection approach → [MODEL_DECISION.md](MODEL_DECISION.md)
 - [x] Preprocessing and inference scripts → model `v0.1.0` served by the API (ONNX Runtime)
 - [x] Separate evaluation set, never used for tuning → region-based RID2 split (`data/splits/rid2_split_v1.csv`); Lebanese set pending hand labels
@@ -43,7 +43,8 @@ Goal: an uploaded image is processed by a baseline model.
 Goal: usable-area estimate with clear limitations.
 
 - [ ] Image validation, resizing, coordinate handling
-- [ ] Require top-down (nadir) imagery: explain in the upload flow; warn on likely oblique photos
+- [ ] Require top-down (nadir) imagery: users state image type and scale before analysis; oblique photos get a clear message, not a result
+- [ ] Replace "confidence" with an explained model score (not a probability of being correct) until scores are calibrated
 - [ ] Scale input or georeferenced-imagery workflow
 - [ ] Roof area from calibrated pixel measurements
 - [ ] Subtract obstacles; configurable clearance margins

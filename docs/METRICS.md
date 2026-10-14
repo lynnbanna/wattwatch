@@ -35,7 +35,7 @@ also improves, meeting the switch criterion in MODEL_DECISION.md.
   gaps above are large enough that the conclusion is unlikely to change.
 - **Batch size differs** between the two runs (16 vs 8) because of GPU memory.
 - **Dutch, mostly pitched roofs.** Lebanese flat roofs, water tanks and solar water heaters
-  are not represented; no regional metrics exist yet.
+  are not represented; no regional metrics exist yet ([#20](https://github.com/lynnbanna/wattwatch/issues/20)).
 - **`obstacle` merges 12 RID2 superstructure types** (windows, chimneys, PV modules, etc.),
   so these metrics say nothing yet about water tanks specifically.
 - **Imagery resolution:** 0.15 m needs drone or high-end aerial imagery. Satellite imagery
@@ -49,6 +49,11 @@ also improves, meeting the switch criterion in MODEL_DECISION.md.
 - **Grey paving, flat garage roofs and courtyards** are sometimes predicted as roof.
 - **Small obstacles** (skylights, vents) are often missed or appear as fragments, consistent
   with the 0.55 recall above.
+
+- **Out-of-distribution inputs score high.** On an oblique ground-level photo of a Lebanese
+  rooftop, the model missed the roof itself and labelled solar collectors and a facade as roof
+  with scores up to 0.97. Scores are not calibrated probabilities and must not be presented
+  as confidence in correctness.
 
 ### Serving
 Released as [`model-v0.1.0`](https://github.com/lynnbanna/wattwatch/releases/tag/model-v0.1.0)
