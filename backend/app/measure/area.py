@@ -45,6 +45,25 @@ def _usable(roof: BaseGeometry, keepout: BaseGeometry, setback_m: float) -> Base
     return inset.difference(keepout)
 
 
+def _keepout(obstacles: list[BaseGeometry], clearance_m: float) -> BaseGeometry:
+    return unary_union([o.buffer(clearance_m) for o in obstacles]) if obstacles else Polygon()
+
+
+def usable_geometry(
+    roofs_px: Sequence[PixelPolygon],
+    obstacles_px: Sequence[PixelPolygon],
+    gsd_m: float,
+    edge_setback_m: float = DEFAULT_EDGE_SETBACK_M,
+    obstacle_clearance_m: float = DEFAULT_OBSTACLE_CLEARANCE_M,
+) -> BaseGeometry:
+    """The usable plan-view area in metres (same rules as `measure`), for panel layout."""
+    roofs = [to_metres(p, gsd_m) for p in roofs_px]
+    if not roofs:
+        return Polygon()
+    keepout = _keepout([to_metres(p, gsd_m) for p in obstacles_px], obstacle_clearance_m)
+    return _usable(unary_union(roofs), keepout, edge_setback_m)
+
+
 def measure(
     roofs_px: Sequence[PixelPolygon],
     obstacles_px: Sequence[PixelPolygon],
@@ -60,9 +79,7 @@ def measure(
     roofs = [to_metres(p, gsd_m) for p in roofs_px]
     obstacles = [to_metres(p, gsd_m) for p in obstacles_px]
     roof_union = unary_union(roofs) if roofs else Polygon()
-    keepout = (
-        unary_union([o.buffer(obstacle_clearance_m) for o in obstacles]) if obstacles else Polygon()
-    )
+    keepout = _keepout(obstacles, obstacle_clearance_m)
     obstacle_union = unary_union(obstacles) if obstacles else Polygon()
     return Measurements(
         roof_areas_m2=[r.area for r in roofs],

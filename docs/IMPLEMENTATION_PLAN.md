@@ -57,13 +57,13 @@ Goal: usable-area estimate with clear limitations.
 ## Week 4 — Solar production engine
 Goal: users configure panels and get an energy estimate.
 
-- [ ] Panel model: rated power, dimensions, spacing
-- [ ] Feasible panel count within usable roof geometry
-- [ ] Monthly and annual generation from a solar-resource model/data source
-- [ ] Orientation, tilt, shading, system losses, inverter efficiency
-- [ ] Solar calculations as independent, unit-tested Python functions
+- [x] Panel model: rated power, dimensions, spacing
+- [x] Feasible panel count within usable roof geometry
+- [x] Monthly and annual generation from a solar-resource model/data source → PVGIS 5.3, cached
+- [x] Orientation, tilt, shading, system losses, inverter efficiency
+- [x] Solar calculations as independent, unit-tested Python functions → `backend/app/solar/`
 - [ ] Charts: monthly production + key assumptions
-- [ ] Validate against trusted reference examples
+- [x] Validate against trusted reference examples → matches PVGIS PVcalc within 0.01 kWh/month ([SOLAR_METHOD.md](SOLAR_METHOD.md))
 
 **Done when:** a user configures a system and inspects monthly and annual estimates.
 
