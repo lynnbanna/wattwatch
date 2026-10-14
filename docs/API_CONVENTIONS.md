@@ -42,7 +42,7 @@
 | 415 | `unsupported_file_type` | Content is not a PNG or JPEG (the declared type is not trusted) |
 | 400 | `invalid_image` | Image data is corrupt or truncated |
 | 422 | `unsupported_imagery` | `imagery_type` is not `top_down` (oblique or ground photos) |
-| 422 | `invalid_scale` | No scale, both scales, incomplete or out-of-image reference line, or scale outside 0.02-2 m/px |
+| 422 | `invalid_scale` | No scale, both scales, incomplete or out-of-image reference line, or scale outside 0.005-2 m/px |
 | 413 | `image_too_large` | Also when the image would exceed `MAX_IMAGE_PIXELS` after resampling to the model's scale |
 | 422 | `invalid_request` | Missing or malformed fields |
 

@@ -4,7 +4,7 @@ import math
 from dataclasses import dataclass
 from typing import Literal
 
-MIN_GSD_M = 0.02
+MIN_GSD_M = 0.005  # low-altitude drone photos can be about 1 cm per pixel
 MAX_GSD_M = 2.0
 MIN_REFERENCE_PX = 10.0
 

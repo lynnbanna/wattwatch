@@ -13,6 +13,10 @@ describe("scaleFromForm", () => {
     });
   });
 
+  it("accepts low-altitude drone resolutions around 1 cm per pixel", () => {
+    expect(scaleFromForm({ ...base, gsdCm: "1.1" })).toMatchObject({ gsdM: 0.011 });
+  });
+
   it("accepts a decimal comma", () => {
     expect(scaleFromForm({ ...base, gsdCm: "7,5" })).toMatchObject({ gsdM: 0.075 });
   });

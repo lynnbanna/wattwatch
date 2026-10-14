@@ -27,6 +27,10 @@ def test_short_reference_line_is_rejected():
         scale_from_reference((0, 0), (5, 0), 1.0)
 
 
+def test_low_altitude_drone_scale_is_accepted():
+    assert scale_from_gsd(0.011).gsd_m == 0.011
+
+
 @pytest.mark.parametrize("gsd", [0.001, 5.0])
 def test_out_of_range_scale_is_rejected(gsd):
     with pytest.raises(ScaleError, match="outside the supported range"):
