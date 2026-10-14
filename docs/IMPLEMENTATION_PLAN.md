@@ -49,7 +49,7 @@ Goal: usable-area estimate with clear limitations.
 - [x] Roof area from calibrated pixel measurements
 - [x] Subtract obstacles; configurable clearance margins
 - [x] Manual correction of roof boundaries and obstacles → move, insert and remove corners; delete or draw outlines; undo; areas re-measured by the API
-- [ ] Store original image, model version, predictions, corrected measurements
+- [x] Store original image, model version, predictions, corrected measurements → `analyses` table + metadata-free PNG; `/analyses/{id}` page with autosave
 - [x] Test against manually measured reference examples → RID2 outlines: roof area median error 6.8%, p90 45% ([METRICS.md](METRICS.md))
 
 **Done when:** calibrated area estimate with manual correction and a documented error measure.

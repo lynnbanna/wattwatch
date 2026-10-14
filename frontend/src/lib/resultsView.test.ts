@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { RoofAnalysisResponse, RoofMeasurementsResponse } from "./api";
+import type { MeasuredAreas, RoofAnalysisResponse } from "./api";
 import { editorReducer, initialEditorState, regionsFromAnalysis } from "./editing";
 import { buildResultsView } from "./resultsView";
 
@@ -11,6 +11,7 @@ const sq = (x: number): [number, number][] => [
 ];
 
 const result: RoofAnalysisResponse = {
+  id: "a1",
   model: { name: "roof-unet-r18", version: "0.1.0", is_stub: false, gsd_m: 0.15 },
   image: { width_px: 100, height_px: 100 },
   scale: { gsd_m: 0.1, source: "gsd", model_gsd_m: 0.15, resample_factor: 0.6667 },
@@ -28,11 +29,10 @@ const result: RoofAnalysisResponse = {
   limitations: ["l"],
 };
 
-const remeasured = (roof: number, usable: number): RoofMeasurementsResponse => ({
+const remeasured = (roof: number, usable: number): MeasuredAreas => ({
   roofs: [{ area_m2: roof, usable_area_m2: usable }],
   obstacles: [],
   measurements: { ...result.measurements, roof_area_m2: roof, usable_area_m2: usable },
-  assumptions: [],
 });
 
 describe("buildResultsView", () => {

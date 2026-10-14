@@ -1,12 +1,18 @@
+import hashlib
 from typing import Annotated, Literal
+from uuid import uuid4
 
 from fastapi import APIRouter, Depends, Form, UploadFile
 from pydantic import BaseModel
+from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
 from app.core.errors import ApiError
+from app.db import get_session
 from app.measure.area import DEFAULT_EDGE_SETBACK_M, DEFAULT_OBSTACLE_CLEARANCE_M, measure
 from app.measure.scale import Scale, ScaleError, scale_from_gsd, scale_from_reference
+from app.models import Analysis
+from app.storage import save_image
 from app.vision.images import ImageValidationError, load_image
 from app.vision.models import get_roof_model
 from app.vision.resample import resample_to_gsd, resampled_size
@@ -80,6 +86,7 @@ class MeasurementsOut(BaseModel):
 
 
 class RoofAnalysisResponse(BaseModel):
+    id: str
     model: ModelInfo
     image: ImageInfo
     scale: ScaleInfo
@@ -129,6 +136,7 @@ def _round_polygon(polygon) -> list[tuple[float, float]]:
 def analyze_roof(
     file: UploadFile,
     model: Annotated[RoofModel, Depends(get_roof_model)],
+    session: Annotated[Session, Depends(get_session)],
     imagery_type: Annotated[Literal["top_down", "oblique_or_ground"], Form()],
     gsd_m: Annotated[float | None, Form(gt=0)] = None,
     reference_x1: Annotated[float | None, Form()] = None,
@@ -139,7 +147,7 @@ def analyze_roof(
     edge_setback_m: Annotated[float, Form(ge=0, le=5)] = DEFAULT_EDGE_SETBACK_M,
     obstacle_clearance_m: Annotated[float, Form(ge=0, le=3)] = DEFAULT_OBSTACLE_CLEARANCE_M,
 ) -> RoofAnalysisResponse:
-    """Detect roofs and obstacles in a top-down image and measure them in square metres.
+    """Detect roofs and obstacles in a top-down image, measure them, and save the analysis.
 
     Scale is required: either `gsd_m` (metres per pixel) or a reference line drawn on
     the image with its real length. The image is resampled to the model's resolution
@@ -217,7 +225,8 @@ def analyze_roof(
     def score(d: Detection) -> float:
         return round(d.score, 3)
 
-    return RoofAnalysisResponse(
+    response = RoofAnalysisResponse(
+        id=str(uuid4()),
         model=ModelInfo(
             name=model.name, version=model.version, is_stub=model.is_stub, gsd_m=model.gsd_m
         ),
@@ -258,3 +267,17 @@ def analyze_roof(
         assumptions=assumptions,
         limitations=limitations,
     )
+
+    upload_sha256 = hashlib.sha256(data).hexdigest()
+    session.add(
+        Analysis(
+            id=response.id,
+            upload_sha256=upload_sha256,
+            image_key=save_image(image, upload_sha256),
+            model_name=model.name,
+            model_version=model.version,
+            result=response.model_dump(mode="json"),
+        )
+    )
+    session.commit()
+    return response

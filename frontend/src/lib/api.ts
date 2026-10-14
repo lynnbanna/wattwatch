@@ -37,6 +37,7 @@ export type ObstacleRegion = {
 };
 
 export type RoofAnalysisResponse = {
+  id: string;
   model: { name: string; version: string; is_stub: boolean; gsd_m: number };
   image: { width_px: number; height_px: number };
   scale: {
@@ -159,4 +160,68 @@ export async function measureRoofs(
     throw new Error(apiErrorMessage(res.status, data));
   }
   return res.json();
+}
+
+export type MeasuredAreas = Omit<RoofMeasurementsResponse, "assumptions">;
+
+export type SavedRegion = {
+  label: string;
+  source: "model" | "edited" | "added";
+  model_score: number | null;
+  polygon_px: Point[];
+};
+
+export type Corrections = { roofs: SavedRegion[]; obstacles: SavedRegion[] };
+
+export type AnalysisRecord = {
+  id: string;
+  created_at: string;
+  updated_at: string;
+  image_url: string;
+  result: RoofAnalysisResponse;
+  corrections: Corrections | null;
+  corrected: MeasuredAreas | null;
+};
+
+export class NotFoundError extends Error {}
+
+async function jsonOrThrow<T>(res: Response): Promise<T> {
+  if (!res.ok) {
+    const body = await res.json().catch(() => null);
+    const message = apiErrorMessage(res.status, body);
+    throw res.status === 404 ? new NotFoundError(message) : new Error(message);
+  }
+  return res.json();
+}
+
+/** Absolute URL for a path the API returns, such as an analysis image_url. */
+export function apiAsset(path: string): string {
+  return `${API_URL}${path}`;
+}
+
+export async function getAnalysis(id: string, signal?: AbortSignal): Promise<AnalysisRecord> {
+  const res = await fetch(apiUrl(`analyses/${encodeURIComponent(id)}`), { signal, cache: "no-store" });
+  return jsonOrThrow(res);
+}
+
+export async function saveCorrections(
+  id: string,
+  corrections: Corrections,
+  signal?: AbortSignal,
+): Promise<AnalysisRecord> {
+  const res = await fetch(apiUrl(`analyses/${encodeURIComponent(id)}/corrections`), {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(corrections),
+    signal,
+  });
+  return jsonOrThrow(res);
+}
+
+export async function deleteAnalysis(id: string): Promise<void> {
+  const res = await fetch(apiUrl(`analyses/${encodeURIComponent(id)}`), { method: "DELETE" });
+  if (!res.ok && res.status !== 404) {
+    const body = await res.json().catch(() => null);
+    throw new Error(apiErrorMessage(res.status, body));
+  }
 }

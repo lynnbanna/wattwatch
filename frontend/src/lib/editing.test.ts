@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
+  correctionsFromRegions,
   countEdits,
   editorReducer,
   initialEditorState,
   midpoint,
+  regionsFromCorrections,
   type EditorState,
   type Region,
 } from "./editing";
@@ -105,5 +107,25 @@ describe("helpers", () => {
     ];
     expect(countEdits(edited, original)).toBe(3);
     expect(countEdits(original, original)).toBe(0);
+  });
+});
+
+describe("saved corrections", () => {
+  it("round-trip regions through the API format", () => {
+    const added: Region = { ...square, id: "added-1", kind: "obstacle", source: "added", modelScore: null };
+    const saved = correctionsFromRegions([square, added]);
+    expect(saved.roofs[0]).toEqual({
+      label: "roof",
+      source: "model",
+      model_score: 0.9,
+      polygon_px: square.polygon,
+    });
+    expect(saved.obstacles[0].source).toBe("added");
+    const restored = regionsFromCorrections(saved);
+    expect(restored.map((r) => [r.kind, r.source, r.modelScore])).toEqual([
+      ["roof", "model", 0.9],
+      ["obstacle", "added", null],
+    ]);
+    expect(new Set(restored.map((r) => r.id)).size).toBe(2);
   });
 });

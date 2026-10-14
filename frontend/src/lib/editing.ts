@@ -1,4 +1,4 @@
-import type { Point, RoofAnalysisResponse } from "./api";
+import type { Corrections, Point, RoofAnalysisResponse } from "./api";
 
 export type RegionKind = "roof" | "obstacle";
 /** Where an outline came from: the model, the model then changed by the user, or drawn by the user. */
@@ -171,4 +171,30 @@ export function midpoint([x1, y1]: Point, [x2, y2]: Point): Point {
 export function countEdits(regions: Region[], original: Region[]): number {
   const removed = original.filter((o) => !regions.some((r) => r.id === o.id)).length;
   return removed + regions.filter((r) => r.source !== "model").length;
+}
+
+export function regionsFromCorrections(corrections: Corrections): Region[] {
+  const toRegions = (kind: RegionKind, saved: Corrections["roofs"]) =>
+    saved.map((r, i) => ({
+      id: `${kind}-saved-${i}`,
+      kind,
+      label: r.label,
+      polygon: r.polygon_px,
+      source: r.source,
+      modelScore: r.model_score,
+    }));
+  return [...toRegions("roof", corrections.roofs), ...toRegions("obstacle", corrections.obstacles)];
+}
+
+export function correctionsFromRegions(regions: Region[]): Corrections {
+  const toSaved = (kind: RegionKind) =>
+    regions
+      .filter((r) => r.kind === kind)
+      .map((r) => ({
+        label: r.label,
+        source: r.source,
+        model_score: r.modelScore,
+        polygon_px: r.polygon,
+      }));
+  return { roofs: toSaved("roof"), obstacles: toSaved("obstacle") };
 }
