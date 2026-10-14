@@ -42,8 +42,9 @@ python -m venv .venv
 .venv\Scripts\activate          # Windows; use `source .venv/bin/activate` on macOS/Linux
 pip install -r requirements-dev.txt
 copy .env.example .env          # `cp` on macOS/Linux
+alembic upgrade head            # create or update database tables
 uvicorn app.main:app --reload
-pytest
+pytest                          # uses an in-memory SQLite database
 ```
 
 **Frontend** (Node 20+ required):

@@ -22,6 +22,7 @@
 | `MAX_UPLOAD_BYTES` | api | `10485760` (10 MB) |
 | `MAX_IMAGE_PIXELS` | api | `12000000` (about 20 s of CPU inference at the limit) |
 | `VISION_MODEL` | api | `stub` (`unet` in Docker Compose): `stub` or `unet` |
+| `UPLOAD_DIR` | api | `../uploads` (`/data/uploads` volume in Docker) |
 | `VISION_MODEL_PATH` | api | `../models/roof_unet_r18_gsd015_v0.1.0.onnx` |
 | `NEXT_PUBLIC_API_URL` | web | `http://localhost:8000` |
 
@@ -31,6 +32,17 @@
 | GET | `/api/v1/health` | API status, version, database reachability |
 | POST | `/api/v1/roof-analysis` | Multipart: `file` (PNG/JPEG), `imagery_type` (`top_down` required), scale as `gsd_m` **or** `reference_x1/y1/x2/y2` + `reference_length_m`, optional `edge_setback_m` (default 0.5) and `obstacle_clearance_m` (default 0.3). Returns roof/obstacle polygons in original image pixels with `model_score`, areas in m², usable area, scale info, assumptions and limitations |
 | POST | `/api/v1/roof-measurements` | JSON: `gsd_m`, `roofs` and `obstacles` (lists of `[x, y]` pixel polygons, 3-2,000 points, up to 500 each), optional `edge_setback_m`, `obstacle_clearance_m`. Returns per-region and total areas with assumptions, using the same geometry as `/roof-analysis` (used after manual correction). 422 `invalid_polygon` for too few or too many points |
+| GET | `/api/v1/analyses/{id}` | A saved analysis: the original `/roof-analysis` result, saved `corrections` and `corrected` areas, and `image_url` |
+| GET | `/api/v1/analyses/{id}/image` | The stored image (PNG) |
+| PUT | `/api/v1/analyses/{id}/corrections` | Replace corrected outlines (`roofs`/`obstacles`: `label`, `source` = model/edited/added, `model_score`, `polygon_px`); areas are recomputed with the analysis's scale and margins. 422 `invalid_polygon` if points lie outside the image |
+| DELETE | `/api/v1/analyses/{id}` | Delete the analysis, and its image unless another analysis uses the same upload. 204 |
+
+`POST /roof-analysis` saves every analysis and returns its `id`. Unknown ids return 404 `analysis_not_found`.
+
+## Stored data
+- **Images** are stored as the decoded image re-encoded as PNG, **without metadata** (EXIF, GPS and camera details are dropped), in `UPLOAD_DIR`, outside the web root, and served only through the API. They are named by the SHA-256 of the uploaded file, which is also recorded.
+- **Database** (`analyses` table, Alembic migrations in `backend/migrations`): model name and version, the full analysis response, user corrections and their measured areas, timestamps.
+- **Access:** there are no accounts until Week 6. Anyone with an analysis id can view, edit or delete it; ids are random UUIDs and are never listed.
 
 ## Model scores
 `model_score` (0-1) is the model's mean pixel score over a region. It is **not** a probability that the outline is correct and is not calibrated; the API returns an explanatory `model_score_note` with every analysis.

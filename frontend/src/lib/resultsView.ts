@@ -1,4 +1,4 @@
-import type { RoofAnalysisResponse, RoofMeasurementsResponse } from "./api";
+import type { MeasuredAreas, RoofAnalysisResponse } from "./api";
 import { countEdits, type Region, type RegionSource } from "./editing";
 
 export type RegionRow = {
@@ -31,7 +31,7 @@ export function buildResultsView(
   result: RoofAnalysisResponse,
   regions: Region[],
   original: Region[],
-  measured: { regions: Region[]; response: RoofMeasurementsResponse } | null,
+  measured: { regions: Region[]; response: MeasuredAreas } | null,
 ): ResultsView {
   const base = {
     isStub: result.model.is_stub,

@@ -18,6 +18,7 @@ class Settings(BaseSettings):
     max_image_pixels: int = 12_000_000  # ~20 s of CPU inference at the upper bound
     vision_model: str = "stub"
     vision_model_path: str = "../models/roof_unet_r18_gsd015_v0.1.0.onnx"
+    upload_dir: str = "../uploads"
 
 
 @lru_cache

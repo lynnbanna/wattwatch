@@ -24,12 +24,15 @@ services:
       # Real model; run `python backend/scripts/fetch_model.py` first, or set VISION_MODEL=stub.
       VISION_MODEL: ${VISION_MODEL:-unet}
       VISION_MODEL_PATH: /app/models/roof_unet_r18_gsd015_v0.1.0.onnx
+      UPLOAD_DIR: /data/uploads
     ports:
       - "8000:8000"
     volumes:
       - ./backend/app:/app/app
       - ./models:/app/models:ro
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+      - ./backend/migrations:/app/migrations
+      - uploads:/data/uploads
+    command: sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
     depends_on:
       db:
         condition: service_healthy
@@ -48,3 +51,4 @@ services:
 
 volumes:
   pgdata:
+  uploads:
