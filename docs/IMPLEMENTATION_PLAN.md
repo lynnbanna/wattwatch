@@ -48,7 +48,7 @@ Goal: usable-area estimate with clear limitations.
 - [x] Scale input or georeferenced-imagery workflow → entered resolution or drawn reference line (GeoTIFF later)
 - [x] Roof area from calibrated pixel measurements
 - [x] Subtract obstacles; configurable clearance margins
-- [ ] Manual correction of roof boundaries and obstacles
+- [x] Manual correction of roof boundaries and obstacles → move, insert and remove corners; delete or draw outlines; undo; areas re-measured by the API
 - [ ] Store original image, model version, predictions, corrected measurements
 - [ ] Test against manually measured reference examples
 

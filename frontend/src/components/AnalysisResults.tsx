@@ -1,13 +1,26 @@
-import type { RoofAnalysisResponse } from "@/lib/api";
+import type { RegionSource } from "@/lib/editing";
 import { formatArea, formatLabel, formatScore } from "@/lib/overlay";
+import type { RegionRow, ResultsView } from "@/lib/resultsView";
 
-export function AnalysisResults({ result }: { result: RoofAnalysisResponse }) {
-  const { measurements: m, roofs, obstacles } = result;
+const SOURCE_NOTE: Record<RegionSource, string | null> = {
+  model: null,
+  edited: "edited by you",
+  added: "drawn by you",
+};
+
+export function AnalysisResults({ view }: { view: ResultsView }) {
+  const m = view.measurements;
   return (
-    <section className="space-y-5">
-      {result.model.is_stub && (
+    <section className={`space-y-5 ${view.stale ? "opacity-60" : ""}`} aria-busy={view.stale}>
+      {view.isStub && (
         <p className="rounded-md bg-amber-50 p-3 text-sm text-amber-800">
           These shapes come from a placeholder model and do not reflect this image.
+        </p>
+      )}
+      {view.editCount > 0 && (
+        <p className="rounded-md bg-sky-50 p-3 text-sm text-sky-800">
+          {view.editCount} outline{view.editCount === 1 ? "" : "s"} changed by you. Areas below use
+          your corrections; dashed outlines on the image are yours.
         </p>
       )}
 
@@ -22,34 +35,15 @@ export function AnalysisResults({ result }: { result: RoofAnalysisResponse }) {
       </p>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <RegionList
-          title="Roofs"
-          swatch="bg-teal-400"
-          rows={roofs.map((r) => ({
-            label: formatLabel(r.label),
-            detail: `${formatArea(r.area_m2)} · usable ${formatArea(r.usable_area_m2)}`,
-            score: r.model_score,
-          }))}
-        />
-        <RegionList
-          title="Obstacles"
-          swatch="bg-amber-400"
-          rows={obstacles.map((o) => ({
-            label: formatLabel(o.label),
-            detail: formatArea(o.area_m2),
-            score: o.model_score,
-          }))}
-        />
+        <RegionList title="Roofs" swatch="bg-teal-400" rows={view.roofs} />
+        <RegionList title="Obstacles" swatch="bg-amber-400" rows={view.obstacles} />
       </div>
-      <p className="text-xs text-slate-500">{result.model_score_note}</p>
+      <p className="text-xs text-slate-500">{view.modelScoreNote}</p>
 
-      <Notes title="Assumptions" items={result.assumptions} />
-      <Notes title="Limitations" items={result.limitations} />
+      <Notes title="Assumptions" items={view.assumptions} />
+      <Notes title="Limitations" items={view.limitations} />
 
-      <p className="text-xs text-slate-400">
-        Model {result.model.name} v{result.model.version} · image {result.image.width_px}×
-        {result.image.height_px} px · {(result.scale.gsd_m * 100).toPrecision(3)} cm per pixel
-      </p>
+      <p className="text-xs text-slate-400">{view.footer}</p>
     </section>
   );
 }
@@ -65,11 +59,7 @@ function Stat({ label, value, emphasis }: { label: string; value: string; emphas
   );
 }
 
-function RegionList(props: {
-  title: string;
-  swatch: string;
-  rows: { label: string; detail: string; score: number }[];
-}) {
+function RegionList(props: { title: string; swatch: string; rows: RegionRow[] }) {
   return (
     <div className="rounded-lg border border-slate-200 p-3">
       <h3 className="flex items-center gap-2 text-sm font-semibold text-slate-800">
@@ -77,16 +67,21 @@ function RegionList(props: {
         {props.title}
       </h3>
       {props.rows.length === 0 ? (
-        <p className="mt-2 text-sm text-slate-500">None detected</p>
+        <p className="mt-2 text-sm text-slate-500">None</p>
       ) : (
         <ul className="mt-2 space-y-1 text-sm text-slate-700">
           {props.rows.map((row, i) => (
             <li key={i} className="flex justify-between gap-2">
               <span>
-                {row.label} <span className="text-slate-500">{row.detail}</span>
+                {formatLabel(row.label)}{" "}
+                <span className="text-slate-500">
+                  {row.areaM2 === null ? "…" : formatArea(row.areaM2)}
+                  {row.usableAreaM2 != null && ` · usable ${formatArea(row.usableAreaM2)}`}
+                </span>
               </span>
               <span className="whitespace-nowrap text-slate-500">
-                model score {formatScore(row.score)}
+                {SOURCE_NOTE[row.source] ??
+                  (row.score === null ? "" : `model score ${formatScore(row.score)}`)}
               </span>
             </li>
           ))}
