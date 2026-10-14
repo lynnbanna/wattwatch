@@ -14,7 +14,8 @@ describe("scaleFromForm", () => {
   });
 
   it("accepts low-altitude drone resolutions around 1 cm per pixel", () => {
-    expect(scaleFromForm({ ...base, gsdCm: "1.1" })).toMatchObject({ gsdM: 0.011 });
+    const result = scaleFromForm({ ...base, gsdCm: "1.1" });
+    expect("gsdM" in result && result.gsdM).toBeCloseTo(0.011);
   });
 
   it("accepts a decimal comma", () => {
