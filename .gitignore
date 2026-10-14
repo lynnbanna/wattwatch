@@ -20,6 +20,8 @@ data/raw/
 data/processed/
 models/*.pt
 models/*.pth
+models/**/*.pt
+models/**/*.pth
 uploads/
 
 # OS / editors

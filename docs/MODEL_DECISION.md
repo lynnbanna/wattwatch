@@ -51,6 +51,10 @@ ground size. This matters for area estimation in Week 3.
 - **Plan:** make GSD a preprocessing parameter and evaluate the baseline at both
   **0.3 m and 0.15 m**. Choose 0.15 m only if obstacle recall improves
   materially without hurting roof IoU. Record the result in the metrics doc.
+- **Result (2026-10-14): 0.15 m selected.** Obstacle recall at IoU ≥ 0.5 rose from
+  0.36 to 0.55 and roof IoU from 0.69 to 0.75 on the test split. See
+  [METRICS.md](METRICS.md). Consequence: inputs need about 0.15 m imagery (drone or
+  high-end aerial); satellite imagery at 0.3–0.5 m will give weaker obstacle results.
 
 ## Evaluation (#7)
 - **Roof:** pixel IoU on the frozen held-out test split.
@@ -74,5 +78,6 @@ ground size. This matters for area estimation in Week 3.
   ImageNet dataset's terms are research-oriented, and the status of weights
   trained on it is legally unsettled. This is widely accepted practice; revisit
   before any commercial release.
-- **Training speed:** the MX550 may be too slow for many experiments. Mitigate
-  with small tiles, mixed precision and few epochs; use Colab if needed.
+- **Training speed:** the MX550 may be too slow for many experiments (0.15 m takes
+  80 min per run). Mixed precision is unusable on it: cuDNN 9.24 returns NaN from
+  float16 BatchNorm, so training runs in float32. Use Colab if experiments multiply.
