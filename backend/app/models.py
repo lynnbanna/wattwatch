@@ -38,3 +38,13 @@ class Analysis(Base):
     # User-corrected outlines and the areas measured from them; null until first edit.
     corrections: Mapped[dict[str, Any] | None] = mapped_column(JsonType, nullable=True)
     corrected_measurements: Mapped[dict[str, Any] | None] = mapped_column(JsonType, nullable=True)
+
+
+class PvgisCache(Base):
+    """Cached PVGIS responses, keyed by rounded location and system geometry."""
+
+    __tablename__ = "pvgis_cache"
+
+    key: Mapped[str] = mapped_column(String(128), primary_key=True)
+    fetched_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    response: Mapped[dict[str, Any]] = mapped_column(JsonType)
