@@ -30,6 +30,17 @@ Never regenerate v1 (`rid2_split_v1.json` records its SHA-256); create a v2 inst
 PYTHONPATH=ml ml/.venv/Scripts/python ml/scripts/make_split.py
 ```
 
+## Preprocess, train, evaluate
+```bash
+export PYTHONPATH=ml
+ml/.venv/Scripts/python ml/scripts/preprocess_rid2.py --gsd 0.15      # -> data/processed/rid2_gsd015
+ml/.venv/Scripts/python ml/scripts/train.py --data data/processed/rid2_gsd015 --batch 8
+ml/.venv/Scripts/python ml/scripts/evaluate.py --checkpoint models/baseline_rid2_gsd015/best.pt
+```
+Checkpoints and metrics go to `models/<run>/` (git-ignored); results are recorded in
+[docs/METRICS.md](../docs/METRICS.md). Training runs in float32: on the GeForce MX550,
+cuDNN 9.24's float16 BatchNorm returns NaN, so `--amp` is opt-in.
+
 ## Tests
 ```bash
 cd ml && .venv/Scripts/python -m pytest && .venv/Scripts/python -m ruff check .
