@@ -55,6 +55,35 @@ also improves, meeting the switch criterion in MODEL_DECISION.md.
   with scores up to 0.97. Scores are not calibrated probabilities and must not be presented
   as confidence in correctness.
 
+### Area-estimation error (2026-10-14)
+Measured with the **served pipeline** (ONNX model, resampling to 0.15 m, polygonisation and
+area code from `backend/app/measure`) on all 724 test tiles, against RID2's hand-drawn roof and
+superstructure outlines (EPSG:28992 metres; they agree with the training masks to about 1.5%).
+Script: `ml/scripts/area_error.py`. The correct scale is given, as in an ideal upload.
+
+**Per tile** (40.96 m × 40.96 m; tiles with at least 25 m² of reference roof):
+
+| | Roof area (620 tiles) | Usable area (567 tiles) |
+|---|---|---|
+| Median absolute error | **6.8%** (38 m² mean absolute) | **9.6%** (37 m² mean absolute) |
+| 90th percentile absolute error | 45.2% | 55.5% |
+| Mean signed error (bias) | +1.3% | +4.5% |
+| Error of the total over all tiles | −3.0% | −0.9% |
+
+Usable area uses the default 0.5 m edge setback and 0.3 m obstacle clearance on both sides.
+
+**Per building** (927 reference buildings lying fully inside a tile):
+- Detected (at least 50% covered by predicted roof): **73.4%**
+- Matched one-to-one at IoU ≥ 0.5: **50.8%**; their area error is 8.4% median, 35.2% at the
+  90th percentile, +3.3% bias
+- Part of a prediction that merges two or more buildings: **21.9%**
+
+**Reading this:** a typical estimate is within about 7-10% with little bias, but the tail is
+long: about one estimate in ten is off by 45% or more, mostly on small roofs, merged buildings
+and paving mistaken for roof. Per-building outlines are unreliable without correction. These
+are best-case numbers (sharp 8 cm aerial imagery downsampled to 0.15 m, exact scale, Dutch
+roofs); expect larger errors on satellite imagery, imprecise scale input, or Lebanese roofs.
+
 ### Serving
 Released as [`model-v0.1.0`](https://github.com/lynnbanna/wattwatch/releases/tag/model-v0.1.0)
 (ONNX, SHA-256 `f3eb427e…`). The API runs it with ONNX Runtime on CPU in 1,024 px windows with

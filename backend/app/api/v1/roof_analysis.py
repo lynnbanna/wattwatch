@@ -26,7 +26,15 @@ PLAN_VIEW_ASSUMPTION = (
     "Areas are plan-view (as seen from above); a pitched roof's surface is larger than its "
     "footprint."
 )
-AREA_ERROR_LIMITATION = "The error of these area estimates has not been measured yet."
+AREA_ERROR_UNMEASURED = "The error of these area estimates has not been measured for this model."
+# Measured on held-out RID2 test tiles with the correct scale (docs/METRICS.md).
+AREA_ERROR_BY_MODEL = {
+    ("roof-unet-r18", "0.1.0"): (
+        "On held-out test images with the correct scale, roof area was within 7% for half of "
+        "the tiles but off by 45% or more for one in ten; usable area within 10% and 56%. "
+        "Expect larger errors on other imagery, and check outlines before relying on a number."
+    ),
+}
 
 
 class ModelInfo(BaseModel):
@@ -196,7 +204,8 @@ def analyze_roof(
         "around obstacles. These are defaults; adjust them to local rules and installer advice.",
         PLAN_VIEW_ASSUMPTION,
     ]
-    limitations = [*model.limitations, AREA_ERROR_LIMITATION]
+    area_error = AREA_ERROR_BY_MODEL.get((model.name, model.version), AREA_ERROR_UNMEASURED)
+    limitations = [*model.limitations, area_error]
     if factor > COARSE_IMAGE_RATIO:
         limitations.insert(
             0,
