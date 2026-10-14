@@ -42,12 +42,12 @@ Goal: an uploaded image is processed by a baseline model.
 ## Week 3 — Pixels to rooftop measurements
 Goal: usable-area estimate with clear limitations.
 
-- [ ] Image validation, resizing, coordinate handling
-- [ ] Require top-down (nadir) imagery: users state image type and scale before analysis; oblique photos get a clear message, not a result
-- [ ] Replace "confidence" with an explained model score (not a probability of being correct) until scores are calibrated
-- [ ] Scale input or georeferenced-imagery workflow
-- [ ] Roof area from calibrated pixel measurements
-- [ ] Subtract obstacles; configurable clearance margins
+- [x] Image validation, resizing, coordinate handling
+- [x] Require top-down (nadir) imagery: users state image type and scale before analysis; oblique photos get a clear message, not a result
+- [x] Replace "confidence" with an explained model score (not a probability of being correct) until scores are calibrated
+- [x] Scale input or georeferenced-imagery workflow → entered resolution or drawn reference line (GeoTIFF later)
+- [x] Roof area from calibrated pixel measurements
+- [x] Subtract obstacles; configurable clearance margins
 - [ ] Manual correction of roof boundaries and obstacles
 - [ ] Store original image, model version, predictions, corrected measurements
 - [ ] Test against manually measured reference examples

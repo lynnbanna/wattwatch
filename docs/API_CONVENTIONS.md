@@ -29,7 +29,10 @@
 | Method | Path | Description |
 |---|---|---|
 | GET | `/api/v1/health` | API status, version, database reachability |
-| POST | `/api/v1/roof-analysis` | Multipart `file` (PNG/JPEG). Returns roof and obstacle polygons in image pixels with confidence, model info, and limitations |
+| POST | `/api/v1/roof-analysis` | Multipart: `file` (PNG/JPEG), `imagery_type` (`top_down` required), scale as `gsd_m` **or** `reference_x1/y1/x2/y2` + `reference_length_m`, optional `edge_setback_m` (default 0.5) and `obstacle_clearance_m` (default 0.3). Returns roof/obstacle polygons in original image pixels with `model_score`, areas in m², usable area, scale info, assumptions and limitations |
+
+## Model scores
+`model_score` (0-1) is the model's mean pixel score over a region. It is **not** a probability that the outline is correct and is not calibrated; the API returns an explanatory `model_score_note` with every analysis.
 
 ## Upload errors
 | Status | Code | When |
@@ -38,6 +41,9 @@
 | 413 | `image_too_large` | Width × height exceeds `MAX_IMAGE_PIXELS` |
 | 415 | `unsupported_file_type` | Content is not a PNG or JPEG (the declared type is not trusted) |
 | 400 | `invalid_image` | Image data is corrupt or truncated |
+| 422 | `unsupported_imagery` | `imagery_type` is not `top_down` (oblique or ground photos) |
+| 422 | `invalid_scale` | No scale, both scales, incomplete or out-of-image reference line, or scale outside 0.02-2 m/px |
+| 413 | `image_too_large` | Also when the image would exceed `MAX_IMAGE_PIXELS` after resampling to the model's scale |
 | 422 | `invalid_request` | Missing or malformed fields |
 
 Interactive docs: `http://localhost:8000/docs` when the API is running.

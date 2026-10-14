@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatConfidence, formatLabel, polygonToPoints } from "./overlay";
+import { formatLabel, formatScore, polygonToPoints } from "./overlay";
 
 describe("polygonToPoints", () => {
   it("formats pixel coordinates for an SVG polygon", () => {
@@ -18,9 +18,9 @@ describe("polygonToPoints", () => {
 });
 
 describe("formatting", () => {
-  it("shows confidence as a whole percentage", () => {
-    expect(formatConfidence(0.5)).toBe("50%");
-    expect(formatConfidence(0.876)).toBe("88%");
+  it("shows model scores as plain numbers, not percentages", () => {
+    expect(formatScore(0.5)).toBe("0.50");
+    expect(formatScore(0.876)).toBe("0.88");
   });
 
   it("turns snake_case labels into readable text", () => {

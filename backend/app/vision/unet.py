@@ -56,8 +56,8 @@ class OnnxRoofModel:
 
     def _limitations(self, metrics: dict) -> tuple[str, ...]:
         notes = [
-            f"Assumes top-down imagery at about {self.gsd_m:g} m per pixel. Other scales "
-            "and oblique photos give unreliable results; image scale is not checked yet.",
+            f"The model runs at {self.gsd_m:g} m per pixel; images are resampled to it using "
+            "the scale you provide, so a wrong scale distorts both detection and areas.",
             "Trained on Dutch aerial imagery (RID2, CC BY 4.0); not yet validated on "
             "Lebanese roofs.",
             "Obstacles are one merged class (chimneys, windows, solar panels and similar); "
