@@ -165,3 +165,11 @@ def test_stub_polygons_lie_inside_the_image():
         assert 0 <= detection.score <= 1
         for x, y in detection.polygon:
             assert 0 <= x <= width and 0 <= y <= height
+
+
+def test_area_error_note_depends_on_the_model():
+    from app.api.v1.roof_analysis import AREA_ERROR_BY_MODEL
+
+    body = _post(_image_bytes("PNG")).json()
+    assert any("not been measured for this model" in n for n in body["limitations"])
+    assert "within 7%" in AREA_ERROR_BY_MODEL[("roof-unet-r18", "0.1.0")]
