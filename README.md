@@ -62,5 +62,6 @@ npm test
 - [Data plan](docs/DATA_PLAN.md)
 - [Model decision](docs/MODEL_DECISION.md)
 - [Model metrics](docs/METRICS.md)
+- [Solar production method](docs/SOLAR_METHOD.md)
 - [API conventions](docs/API_CONVENTIONS.md)
 - [Contributing & branching](docs/CONTRIBUTING.md)
