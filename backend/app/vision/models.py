@@ -23,6 +23,7 @@ class StubRoofModel:
     name = "stub"
     version = "0.1.0"
     is_stub = True
+    gsd_m = 0.15
     limitations = (
         "Stub model: placeholder geometry for testing the pipeline, not an analysis of this image.",
     )

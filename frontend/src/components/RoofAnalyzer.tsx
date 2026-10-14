@@ -4,25 +4,45 @@ import { useEffect, useRef, useState } from "react";
 import {
   ACCEPTED_IMAGE_TYPES,
   analyzeRoof,
+  DEFAULT_EDGE_SETBACK_M,
+  DEFAULT_OBSTACLE_CLEARANCE_M,
   validateImageFile,
-  type Detection,
+  type Point,
   type RoofAnalysisResponse,
 } from "@/lib/api";
-import { formatConfidence, formatLabel, polygonToPoints } from "@/lib/overlay";
+import { polygonToPoints, toImagePixels } from "@/lib/overlay";
+import { nextReferenceLine, parseMargin, scaleFromForm, type ScaleMode } from "@/lib/scale";
+import { AnalysisResults } from "./AnalysisResults";
 
-type State =
-  | { kind: "empty" }
-  | { kind: "loading"; imageUrl: string }
-  | { kind: "done"; imageUrl: string; result: RoofAnalysisResponse }
-  | { kind: "error"; imageUrl: string | null; message: string };
+type Request =
+  | { kind: "idle" }
+  | { kind: "loading" }
+  | { kind: "done"; result: RoofAnalysisResponse }
+  | { kind: "error"; message: string };
+
+type Imagery = "top_down" | "oblique_or_ground" | null;
 
 const ROOF_STYLE = "fill-teal-400/25 stroke-teal-600";
 const OBSTACLE_STYLE = "fill-amber-400/40 stroke-amber-600";
 
 export function RoofAnalyzer() {
-  const [state, setState] = useState<State>({ kind: "empty" });
+  const [file, setFile] = useState<File | null>(null);
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [natural, setNatural] = useState<{ w: number; h: number } | null>(null);
+  const [fileError, setFileError] = useState<string | null>(null);
+  const [imagery, setImagery] = useState<Imagery>(null);
+  const [scaleMode, setScaleMode] = useState<ScaleMode>("gsd");
+  const [gsdCm, setGsdCm] = useState("");
+  const [line, setLine] = useState<{ start: Point | null; end: Point | null }>({
+    start: null,
+    end: null,
+  });
+  const [lengthM, setLengthM] = useState("");
+  const [setback, setSetback] = useState(String(DEFAULT_EDGE_SETBACK_M));
+  const [clearance, setClearance] = useState(String(DEFAULT_OBSTACLE_CLEARANCE_M));
+  const [request, setRequest] = useState<Request>({ kind: "idle" });
+  const [formError, setFormError] = useState<string | null>(null);
   const controllerRef = useRef<AbortController | null>(null);
-  const imageUrl = state.kind === "empty" ? null : state.imageUrl;
 
   useEffect(() => {
     return () => {
@@ -32,68 +52,136 @@ export function RoofAnalyzer() {
 
   useEffect(() => () => controllerRef.current?.abort(), []);
 
-  function handleFile(file: File | undefined) {
-    if (!file) return;
-    const invalid = validateImageFile(file);
+  function chooseFile(next: File | undefined) {
+    if (!next) return;
+    const invalid = validateImageFile(next);
+    controllerRef.current?.abort();
+    setRequest({ kind: "idle" });
+    setFormError(null);
+    setLine({ start: null, end: null });
     if (invalid) {
-      setState({ kind: "error", imageUrl: null, message: invalid });
+      setFile(null);
+      setImageUrl(null);
+      setFileError(invalid);
       return;
     }
+    setFileError(null);
+    setFile(next);
+    setNatural(null);
+    setImageUrl(URL.createObjectURL(next));
+  }
+
+  const drawing = scaleMode === "reference_line" && imagery === "top_down" && request.kind !== "done";
+
+  function handleImageClick(e: React.MouseEvent<HTMLElement>) {
+    if (!drawing || !natural) return;
+    const box = e.currentTarget.getBoundingClientRect();
+    const point = toImagePixels(e.clientX, e.clientY, box, natural.w, natural.h);
+    setLine((l) => nextReferenceLine(l.start, l.end, point));
+  }
+
+  function analyze() {
+    if (!file) return;
+    const scale = scaleFromForm({ mode: scaleMode, gsdCm, ...line, lengthM });
+    const edgeSetbackM = parseMargin(setback, 5);
+    const obstacleClearanceM = parseMargin(clearance, 3);
+    if ("error" in scale) return setFormError(scale.error);
+    if (edgeSetbackM === null) return setFormError("Edge setback must be between 0 and 5 m.");
+    if (obstacleClearanceM === null) {
+      return setFormError("Obstacle clearance must be between 0 and 3 m.");
+    }
+    setFormError(null);
 
     controllerRef.current?.abort();
     const controller = new AbortController();
     controllerRef.current = controller;
-    const url = URL.createObjectURL(file);
-    setState({ kind: "loading", imageUrl: url });
-
-    analyzeRoof(file, controller.signal)
-      .then((result) => setState({ kind: "done", imageUrl: url, result }))
+    setRequest({ kind: "loading" });
+    analyzeRoof(file, { scale: scale.scale, edgeSetbackM, obstacleClearanceM }, controller.signal)
+      .then((result) => setRequest({ kind: "done", result }))
       .catch((err: unknown) => {
         if (controller.signal.aborted) return;
-        setState({
+        setRequest({
           kind: "error",
-          imageUrl: url,
           message: err instanceof Error ? err.message : "Analysis failed",
         });
       });
   }
 
+  const result = request.kind === "done" ? request.result : null;
+
   return (
     <div className="space-y-6">
       <label className="block rounded-lg border-2 border-dashed border-slate-300 p-6 text-center hover:border-teal-500">
-        <span className="font-medium text-slate-800">Choose a rooftop image</span>
+        <span className="font-medium text-slate-800">
+          {file ? "Choose a different image" : "Choose a rooftop image"}
+        </span>
         <span className="mt-1 block text-sm text-slate-500">PNG or JPEG, up to 10 MB</span>
         <input
           type="file"
           accept={ACCEPTED_IMAGE_TYPES.join(",")}
           className="sr-only"
           onChange={(e) => {
-            handleFile(e.target.files?.[0]);
+            chooseFile(e.target.files?.[0]);
             e.target.value = "";
           }}
         />
       </label>
 
-      {state.kind === "empty" && (
+      {!file && !fileError && (
         <p className="text-sm text-slate-500">
-          Upload a top-down aerial or drone image, ideally about 15 cm per pixel, to see the
-          detected roof outlines and obstacles. Photos taken at an angle will not give reliable
-          results.
+          Use a top-down aerial, drone or satellite image of the roof. You will be asked for its
+          scale so areas can be measured in square metres.
         </p>
       )}
 
-      {state.kind === "error" && (
-        <p role="alert" className="rounded-md bg-red-50 p-3 text-sm text-red-700">
-          {state.message}
-        </p>
-      )}
+      {fileError && <Alert>{fileError}</Alert>}
 
       {imageUrl && (
-        <figure className="relative overflow-hidden rounded-lg border border-slate-200">
+        <figure
+          className={`relative overflow-hidden rounded-lg border border-slate-200 ${drawing ? "cursor-crosshair" : ""}`}
+          onClick={handleImageClick}
+        >
           {/* eslint-disable-next-line @next/next/no-img-element -- local blob URL */}
-          <img src={imageUrl} alt="Uploaded rooftop" className="block h-auto w-full" />
-          {state.kind === "done" && <Overlay result={state.result} />}
-          {state.kind === "loading" && (
+          <img
+            src={imageUrl}
+            alt="Uploaded rooftop"
+            className="block h-auto w-full select-none"
+            draggable={false}
+            onLoad={(e) =>
+              setNatural({ w: e.currentTarget.naturalWidth, h: e.currentTarget.naturalHeight })
+            }
+          />
+          {natural && (
+            <svg
+              viewBox={`0 0 ${natural.w} ${natural.h}`}
+              preserveAspectRatio="none"
+              className="pointer-events-none absolute inset-0 h-full w-full"
+              aria-hidden="true"
+            >
+              {result?.roofs.map((d, i) => (
+                <polygon
+                  key={`roof-${i}`}
+                  points={polygonToPoints(d.polygon_px)}
+                  className={ROOF_STYLE}
+                  strokeWidth={2}
+                  vectorEffect="non-scaling-stroke"
+                />
+              ))}
+              {result?.obstacles.map((d, i) => (
+                <polygon
+                  key={`obstacle-${i}`}
+                  points={polygonToPoints(d.polygon_px)}
+                  className={OBSTACLE_STYLE}
+                  strokeWidth={2}
+                  vectorEffect="non-scaling-stroke"
+                />
+              ))}
+              {scaleMode === "reference_line" && line.start && (
+                <ReferenceLine start={line.start} end={line.end} />
+              )}
+            </svg>
+          )}
+          {request.kind === "loading" && (
             <div className="absolute inset-0 flex items-center justify-center bg-white/60 text-sm font-medium text-slate-700">
               Analyzing roof…
             </div>
@@ -101,100 +189,216 @@ export function RoofAnalyzer() {
         </figure>
       )}
 
-      {state.kind === "done" && <Results result={state.result} />}
+      {file && request.kind !== "done" && (
+        <section className="space-y-5 rounded-lg border border-slate-200 p-4">
+          <fieldset>
+            <legend className="text-sm font-semibold text-slate-800">
+              1. What kind of image is this?
+            </legend>
+            <div className="mt-2 space-y-2 text-sm">
+              <Choice
+                name="imagery"
+                checked={imagery === "top_down"}
+                onChange={() => setImagery("top_down")}
+                label="Top-down (aerial, drone or satellite, looking straight down)"
+              />
+              <Choice
+                name="imagery"
+                checked={imagery === "oblique_or_ground"}
+                onChange={() => setImagery("oblique_or_ground")}
+                label="Taken at an angle or from the ground"
+              />
+            </div>
+          </fieldset>
+
+          {imagery === "oblique_or_ground" && (
+            <p className="rounded-md bg-amber-50 p-3 text-sm text-amber-800">
+              Angled and ground-level photos can&apos;t be measured: perspective makes distant parts
+              look smaller, so shapes and areas would be wrong. Please use a top-down image, for
+              example a drone photo taken straight down.
+            </p>
+          )}
+
+          {imagery === "top_down" && (
+            <>
+              <fieldset>
+                <legend className="text-sm font-semibold text-slate-800">2. Image scale</legend>
+                <div className="mt-2 space-y-2 text-sm">
+                  <Choice
+                    name="scale"
+                    checked={scaleMode === "gsd"}
+                    onChange={() => setScaleMode("gsd")}
+                    label="I know the resolution"
+                  />
+                  <Choice
+                    name="scale"
+                    checked={scaleMode === "reference_line"}
+                    onChange={() => setScaleMode("reference_line")}
+                    label="I'll draw a line of known length on the image"
+                  />
+                </div>
+                {scaleMode === "gsd" ? (
+                  <NumberField
+                    label="Resolution"
+                    unit="cm per pixel"
+                    value={gsdCm}
+                    onChange={setGsdCm}
+                    hint="Drone and aerial images are often 2–15 cm per pixel; satellite images 30–50 cm."
+                  />
+                ) : (
+                  <div className="mt-3 space-y-2 text-sm text-slate-600">
+                    <p>
+                      Click two points on the image along an edge you know the length of, such as a
+                      roof side or a wall.{" "}
+                      {line.start && !line.end && "Now click the second point."}
+                      {line.end && "Click again to redraw."}
+                    </p>
+                    <NumberField
+                      label="Real length of the line"
+                      unit="m"
+                      value={lengthM}
+                      onChange={setLengthM}
+                    />
+                  </div>
+                )}
+              </fieldset>
+
+              <details className="text-sm">
+                <summary className="cursor-pointer font-semibold text-slate-800">
+                  3. Margins for usable area (optional)
+                </summary>
+                <div className="mt-2 grid gap-3 sm:grid-cols-2">
+                  <NumberField
+                    label="Edge setback"
+                    unit="m"
+                    value={setback}
+                    onChange={setSetback}
+                    hint="Space kept free along roof edges."
+                  />
+                  <NumberField
+                    label="Obstacle clearance"
+                    unit="m"
+                    value={clearance}
+                    onChange={setClearance}
+                    hint="Space kept free around tanks and other obstacles."
+                  />
+                </div>
+                <p className="mt-2 text-xs text-slate-500">
+                  Defaults are placeholders; follow local rules and your installer&apos;s advice.
+                </p>
+              </details>
+
+              {formError && <Alert>{formError}</Alert>}
+
+              <button
+                type="button"
+                onClick={analyze}
+                disabled={request.kind === "loading"}
+                className="rounded-md bg-teal-700 px-4 py-2 font-medium text-white hover:bg-teal-800 disabled:opacity-50"
+              >
+                {request.kind === "loading" ? "Analyzing…" : "Analyze roof"}
+              </button>
+            </>
+          )}
+        </section>
+      )}
+
+      {request.kind === "error" && <Alert>{request.message}</Alert>}
+
+      {result && (
+        <>
+          <AnalysisResults result={result} />
+          <button
+            type="button"
+            onClick={() => setRequest({ kind: "idle" })}
+            className="text-sm font-medium text-teal-700 hover:underline"
+          >
+            Change scale or margins and analyze again
+          </button>
+        </>
+      )}
     </div>
   );
 }
 
-function Overlay({ result }: { result: RoofAnalysisResponse }) {
-  const { width_px, height_px } = result.image;
+function ReferenceLine({ start, end }: { start: Point; end: Point | null }) {
   return (
-    <svg
-      viewBox={`0 0 ${width_px} ${height_px}`}
-      preserveAspectRatio="none"
-      className="absolute inset-0 h-full w-full"
-      aria-hidden="true"
-    >
-      {result.roofs.map((d, i) => (
-        <polygon
-          key={`roof-${i}`}
-          points={polygonToPoints(d.polygon_px)}
-          className={ROOF_STYLE}
-          strokeWidth={2}
+    <g className="stroke-fuchsia-600" strokeWidth={3}>
+      {end && (
+        <line
+          x1={start[0]}
+          y1={start[1]}
+          x2={end[0]}
+          y2={end[1]}
           vectorEffect="non-scaling-stroke"
         />
-      ))}
-      {result.obstacles.map((d, i) => (
-        <polygon
-          key={`obstacle-${i}`}
-          points={polygonToPoints(d.polygon_px)}
-          className={OBSTACLE_STYLE}
-          strokeWidth={2}
-          vectorEffect="non-scaling-stroke"
-        />
-      ))}
-    </svg>
-  );
-}
-
-function Results({ result }: { result: RoofAnalysisResponse }) {
-  return (
-    <section className="space-y-4">
-      {result.model.is_stub && (
-        <p className="rounded-md bg-amber-50 p-3 text-sm text-amber-800">
-          These shapes come from a placeholder model and do not reflect this image.
-        </p>
       )}
-
-      <div className="grid gap-4 sm:grid-cols-2">
-        <DetectionList title="Roof" swatch="bg-teal-400" items={result.roofs} />
-        <DetectionList title="Obstacles" swatch="bg-amber-400" items={result.obstacles} />
-      </div>
-
-      <div>
-        <h3 className="text-sm font-semibold text-slate-800">Limitations</h3>
-        <ul className="mt-1 list-disc space-y-1 pl-5 text-sm text-slate-600">
-          {result.limitations.map((note) => (
-            <li key={note}>{note}</li>
-          ))}
-        </ul>
-      </div>
-
-      <p className="text-xs text-slate-400">
-        Model {result.model.name} v{result.model.version} · image {result.image.width_px}×
-        {result.image.height_px} px
-      </p>
-    </section>
+      {[start, end].map(
+        (p, i) =>
+          p && (
+            <circle
+              key={i}
+              cx={p[0]}
+              cy={p[1]}
+              r={4}
+              className="fill-white"
+              vectorEffect="non-scaling-stroke"
+            />
+          ),
+      )}
+    </g>
   );
 }
 
-function DetectionList({
-  title,
-  swatch,
-  items,
-}: {
-  title: string;
-  swatch: string;
-  items: Detection[];
+function Choice(props: {
+  name: string;
+  checked: boolean;
+  onChange: () => void;
+  label: string;
 }) {
   return (
-    <div className="rounded-lg border border-slate-200 p-3">
-      <h3 className="flex items-center gap-2 text-sm font-semibold text-slate-800">
-        <span className={`inline-block h-3 w-3 rounded-sm ${swatch}`} />
-        {title}
-      </h3>
-      {items.length === 0 ? (
-        <p className="mt-2 text-sm text-slate-500">None detected</p>
-      ) : (
-        <ul className="mt-2 space-y-1 text-sm text-slate-700">
-          {items.map((d, i) => (
-            <li key={i} className="flex justify-between">
-              <span>{formatLabel(d.label)}</span>
-              <span className="text-slate-500">confidence {formatConfidence(d.confidence)}</span>
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
+    <label className="flex items-start gap-2">
+      <input
+        type="radio"
+        name={props.name}
+        checked={props.checked}
+        onChange={props.onChange}
+        className="mt-1"
+      />
+      <span className="text-slate-700">{props.label}</span>
+    </label>
+  );
+}
+
+function NumberField(props: {
+  label: string;
+  unit: string;
+  value: string;
+  onChange: (v: string) => void;
+  hint?: string;
+}) {
+  return (
+    <label className="mt-3 block text-sm">
+      <span className="font-medium text-slate-700">{props.label}</span>
+      <span className="mt-1 flex items-center gap-2">
+        <input
+          type="text"
+          inputMode="decimal"
+          value={props.value}
+          onChange={(e) => props.onChange(e.target.value)}
+          className="w-28 rounded-md border border-slate-300 px-2 py-1"
+        />
+        <span className="text-slate-500">{props.unit}</span>
+      </span>
+      {props.hint && <span className="mt-1 block text-xs text-slate-500">{props.hint}</span>}
+    </label>
+  );
+}
+
+function Alert({ children }: { children: React.ReactNode }) {
+  return (
+    <p role="alert" className="rounded-md bg-red-50 p-3 text-sm text-red-700">
+      {children}
+    </p>
   );
 }

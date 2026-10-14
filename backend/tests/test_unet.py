@@ -32,8 +32,8 @@ def test_roof_with_obstacle_becomes_one_roof_and_one_obstacle():
     assert len(pred.roofs) == 1 and len(pred.obstacles) == 1
     xs = [x for x, _ in pred.roofs[0].polygon]
     assert min(xs) == 10 and max(xs) == 89
-    assert pred.obstacles[0].confidence == pytest.approx(0.8)
-    assert pred.roofs[0].confidence == pytest.approx(0.95, abs=0.01)  # P(roof) + P(obstacle)
+    assert pred.obstacles[0].score == pytest.approx(0.8)
+    assert pred.roofs[0].score == pytest.approx(0.95, abs=0.01)  # P(roof) + P(obstacle)
 
 
 def test_regions_below_minimum_area_are_dropped():
@@ -130,4 +130,4 @@ def test_real_model_runs_end_to_end():
     pred = model.predict(Image.new("RGB", (320, 288), (128, 128, 128)))
     assert model.gsd_m == 0.15
     for d in pred.roofs + pred.obstacles:
-        assert 0 <= d.confidence <= 1
+        assert 0 <= d.score <= 1

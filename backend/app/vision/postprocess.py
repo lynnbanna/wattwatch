@@ -10,7 +10,7 @@ MIN_OBSTACLE_AREA_M2 = 0.25  # same threshold as the evaluation (docs/METRICS.md
 SIMPLIFY_TOLERANCE_PX = 1.0
 
 
-def _regions(mask: np.ndarray, confidence: np.ndarray, label: str, min_px: int) -> list[Detection]:
+def _regions(mask: np.ndarray, score: np.ndarray, label: str, min_px: int) -> list[Detection]:
     count, labels, stats, _ = cv2.connectedComponentsWithStats(
         mask.astype(np.uint8), connectivity=8
     )
@@ -28,7 +28,7 @@ def _regions(mask: np.ndarray, confidence: np.ndarray, label: str, min_px: int) 
         if len(outline) < 3:
             continue
         polygon = [(float(x), float(y)) for [[x, y]] in outline]
-        detections.append(Detection(label, float(confidence[component].mean()), polygon))
+        detections.append(Detection(label, float(score[component].mean()), polygon))
     return detections
 
 
@@ -37,7 +37,7 @@ def probabilities_to_prediction(
 ) -> RoofPrediction:
     """`probs` is (classes, height, width) softmax output; `gsd_m` is metres per pixel.
 
-    Roofs include the obstacles sitting on them. Confidence is the mean
+    Roofs include the obstacles sitting on them. The score is the mean
     probability of the region's class (for roofs, roof + obstacle) over the region.
     """
     roof, obstacle = classes.index("roof"), classes.index("obstacle")

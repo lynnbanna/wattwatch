@@ -19,19 +19,78 @@ export async function getHealth(signal?: AbortSignal): Promise<HealthResponse> {
   return res.json();
 }
 
-export type Detection = {
+export type Point = [number, number];
+
+export type RoofRegion = {
   label: string;
-  confidence: number;
-  polygon_px: [number, number][];
+  model_score: number;
+  polygon_px: Point[];
+  area_m2: number;
+  usable_area_m2: number;
+};
+
+export type ObstacleRegion = {
+  label: string;
+  model_score: number;
+  polygon_px: Point[];
+  area_m2: number;
 };
 
 export type RoofAnalysisResponse = {
-  model: { name: string; version: string; is_stub: boolean };
+  model: { name: string; version: string; is_stub: boolean; gsd_m: number };
   image: { width_px: number; height_px: number };
-  roofs: Detection[];
-  obstacles: Detection[];
+  scale: {
+    gsd_m: number;
+    source: "gsd" | "reference_line";
+    model_gsd_m: number;
+    resample_factor: number;
+  };
+  roofs: RoofRegion[];
+  obstacles: ObstacleRegion[];
+  measurements: {
+    roof_area_m2: number;
+    obstacle_area_m2: number;
+    usable_area_m2: number;
+    edge_setback_m: number;
+    obstacle_clearance_m: number;
+  };
+  model_score_note: string;
+  assumptions: string[];
   limitations: string[];
 };
+
+export type ScaleInput =
+  | { kind: "gsd"; gsdM: number }
+  | { kind: "reference_line"; start: Point; end: Point; lengthM: number };
+
+export type AnalysisOptions = {
+  scale: ScaleInput;
+  edgeSetbackM: number;
+  obstacleClearanceM: number;
+};
+
+export const DEFAULT_EDGE_SETBACK_M = 0.5;
+export const DEFAULT_OBSTACLE_CLEARANCE_M = 0.3;
+
+/** Form fields for POST /roof-analysis (the file is added separately). */
+export function analysisFields(options: AnalysisOptions): Record<string, string> {
+  const fields: Record<string, string> = {
+    imagery_type: "top_down",
+    edge_setback_m: String(options.edgeSetbackM),
+    obstacle_clearance_m: String(options.obstacleClearanceM),
+  };
+  const { scale } = options;
+  if (scale.kind === "gsd") {
+    fields.gsd_m = String(scale.gsdM);
+  } else {
+    fields.reference_x1 = String(scale.start[0]);
+    fields.reference_y1 = String(scale.start[1]);
+    fields.reference_x2 = String(scale.end[0]);
+    fields.reference_y2 = String(scale.end[1]);
+    fields.reference_length_m = String(scale.lengthM);
+  }
+  return fields;
+}
 
 export const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
 export const ACCEPTED_IMAGE_TYPES = ["image/png", "image/jpeg"];
@@ -55,10 +114,14 @@ export function apiErrorMessage(status: number, body: unknown): string {
 
 export async function analyzeRoof(
   file: Blob,
+  options: AnalysisOptions,
   signal?: AbortSignal,
 ): Promise<RoofAnalysisResponse> {
   const form = new FormData();
   form.append("file", file);
+  for (const [key, value] of Object.entries(analysisFields(options))) {
+    form.append(key, value);
+  }
   const res = await fetch(apiUrl("roof-analysis"), { method: "POST", body: form, signal });
   if (!res.ok) {
     const body = await res.json().catch(() => null);
