@@ -15,8 +15,9 @@ class Settings(BaseSettings):
     database_url: str = "postgresql+psycopg://wattwatch:wattwatch@localhost:5432/wattwatch"
     cors_origins: list[str] = ["http://localhost:3000"]
     max_upload_bytes: int = 10 * 1024 * 1024
-    max_image_pixels: int = 40_000_000
+    max_image_pixels: int = 12_000_000  # ~20 s of CPU inference at the upper bound
     vision_model: str = "stub"
+    vision_model_path: str = "../models/roof_unet_r18_gsd015_v0.1.0.onnx"
 
 
 @lru_cache

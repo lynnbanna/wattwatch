@@ -20,8 +20,9 @@
 | `LOG_LEVEL` | api | `INFO` |
 | `ENVIRONMENT` | api | `development` |
 | `MAX_UPLOAD_BYTES` | api | `10485760` (10 MB) |
-| `MAX_IMAGE_PIXELS` | api | `40000000` |
-| `VISION_MODEL` | api | `stub` |
+| `MAX_IMAGE_PIXELS` | api | `12000000` (about 20 s of CPU inference at the limit) |
+| `VISION_MODEL` | api | `stub` (`unet` in Docker Compose): `stub` or `unet` |
+| `VISION_MODEL_PATH` | api | `../models/roof_unet_r18_gsd015_v0.1.0.onnx` |
 | `NEXT_PUBLIC_API_URL` | web | `http://localhost:8000` |
 
 ## Current endpoints

@@ -37,6 +37,10 @@ ml/.venv/Scripts/python ml/scripts/preprocess_rid2.py --gsd 0.15      # -> data/
 ml/.venv/Scripts/python ml/scripts/train.py --data data/processed/rid2_gsd015 --batch 8
 ml/.venv/Scripts/python ml/scripts/evaluate.py --checkpoint models/baseline_rid2_gsd015/best.pt
 ```
+Export for serving (writes `models/*.onnx` and checks it against PyTorch):
+```bash
+ml/.venv/Scripts/python ml/scripts/export_onnx.py --checkpoint models/baseline_rid2_gsd015/best.pt --version 0.1.0
+```
 Checkpoints and metrics go to `models/<run>/` (git-ignored); results are recorded in
 [docs/METRICS.md](../docs/METRICS.md). Training runs in float32: on the GeForce MX550,
 cuDNN 9.24's float16 BatchNorm returns NaN, so `--amp` is opt-in.

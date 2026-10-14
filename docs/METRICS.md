@@ -43,5 +43,14 @@ also improves, meeting the switch criterion in MODEL_DECISION.md.
   the 0.3 m column on such inputs.
 - Test regions are more rural than training (fewer roof and obstacle pixels).
 
-### Failure cases
-Not yet reviewed visually; to be documented with examples before the model is served.
+### Failure cases (0.15 m model, visual review of test tiles)
+- **Neighbouring roofs merge** into one region when they touch or are separated by only a
+  narrow gap, so per-building outlines are not reliable yet.
+- **Grey paving, flat garage roofs and courtyards** are sometimes predicted as roof.
+- **Small obstacles** (skylights, vents) are often missed or appear as fragments, consistent
+  with the 0.55 recall above.
+
+### Serving
+Released as [`model-v0.1.0`](https://github.com/lynnbanna/wattwatch/releases/tag/model-v0.1.0)
+(ONNX, SHA-256 `f3eb427e…`). The API runs it with ONNX Runtime on CPU in 1,024 px windows with
+64 px overlap: about 0.1 s for a 273 px tile and 11 s for a 3,000 × 2,000 px image.

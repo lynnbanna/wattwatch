@@ -22,6 +22,7 @@ models/*.pt
 models/*.pth
 models/**/*.pt
 models/**/*.pth
+models/**/*.onnx
 uploads/
 
 # OS / editors

@@ -76,8 +76,9 @@ export function RoofAnalyzer() {
 
       {state.kind === "empty" && (
         <p className="text-sm text-slate-500">
-          Upload an aerial or satellite image of a single roof to see the detected roof outline
-          and obstacles.
+          Upload a top-down aerial or drone image, ideally about 15 cm per pixel, to see the
+          detected roof outlines and obstacles. Photos taken at an angle will not give reliable
+          results.
         </p>
       )}
 
