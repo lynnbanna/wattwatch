@@ -62,7 +62,7 @@ Goal: users configure panels and get an energy estimate.
 - [x] Monthly and annual generation from a solar-resource model/data source → PVGIS 5.3, cached
 - [x] Orientation, tilt, shading, system losses, inverter efficiency
 - [x] Solar calculations as independent, unit-tested Python functions → `backend/app/solar/`
-- [ ] Charts: monthly production + key assumptions
+- [x] Charts: monthly production + key assumptions → solar section on the analysis page
 - [x] Validate against trusted reference examples → matches PVGIS PVcalc within 0.01 kWh/month ([SOLAR_METHOD.md](SOLAR_METHOD.md))
 
 **Done when:** a user configures a system and inspects monthly and annual estimates.
