@@ -21,10 +21,14 @@ services:
       DATABASE_URL: postgresql+psycopg://wattwatch:wattwatch@db:5432/wattwatch
       CORS_ORIGINS: '["http://localhost:3000"]'
       LOG_LEVEL: INFO
+      # Real model; run `python backend/scripts/fetch_model.py` first, or set VISION_MODEL=stub.
+      VISION_MODEL: ${VISION_MODEL:-unet}
+      VISION_MODEL_PATH: /app/models/roof_unet_r18_gsd015_v0.1.0.onnx
     ports:
       - "8000:8000"
     volumes:
       - ./backend/app:/app/app
+      - ./models:/app/models:ro
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
     depends_on:
       db:

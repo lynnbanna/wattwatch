@@ -21,8 +21,9 @@ docs/       Plan, PRD, data plan, API conventions
 ```
 
 ## Quick start (Docker)
-Requires Docker Desktop.
+Requires Docker Desktop and Python 3.11+ (to download the model, about 57 MB).
 ```bash
+python backend/scripts/fetch_model.py
 docker compose up --build
 ```
 - Web: http://localhost:3000 — the status panel should show API `ok` and Database `ok`
@@ -30,6 +31,8 @@ docker compose up --build
 
 On Windows, if the build fails with `additional privileges requested`, run it with the
 classic builder: `$env:COMPOSE_BAKE="false"; docker compose up --build` (PowerShell).
+
+To run without the model, start with `VISION_MODEL=stub`, which returns placeholder shapes.
 
 ## Running without Docker
 **Backend** (Python 3.11+; PostgreSQL running locally or via `docker compose up db`):

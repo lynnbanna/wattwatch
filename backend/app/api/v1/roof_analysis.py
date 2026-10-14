@@ -6,7 +6,8 @@ from pydantic import BaseModel
 from app.core.config import get_settings
 from app.core.errors import ApiError
 from app.vision.images import ImageValidationError, load_image
-from app.vision.models import Detection, RoofModel, get_roof_model
+from app.vision.models import get_roof_model
+from app.vision.types import Detection, RoofModel
 
 router = APIRouter(tags=["vision"])
 
@@ -15,9 +16,6 @@ _STATUS_BY_CODE = {"unsupported_file_type": 415, "image_too_large": 413, "invali
 PIXEL_LIMITATION = (
     "Coordinates are in image pixels. Real-world area needs a scale or georeferenced "
     "imagery and is not estimated here."
-)
-STUB_LIMITATION = (
-    "Stub model: placeholder geometry for testing the pipeline, not an analysis of this image."
 )
 
 
@@ -71,7 +69,7 @@ def analyze_roof(
         raise ApiError(_STATUS_BY_CODE[exc.code], exc.code, exc.message) from exc
 
     prediction = model.predict(image)
-    limitations = [PIXEL_LIMITATION] + ([STUB_LIMITATION] if model.is_stub else [])
+    limitations = [PIXEL_LIMITATION, *model.limitations]
     return RoofAnalysisResponse(
         model=ModelInfo(name=model.name, version=model.version, is_stub=model.is_stub),
         image=ImageInfo(width_px=image.width, height_px=image.height),

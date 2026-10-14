@@ -1,37 +1,12 @@
 """Roof models behind one small interface so the implementation stays replaceable."""
 
-from dataclasses import dataclass
+from collections.abc import Callable
 from functools import lru_cache
-from typing import Protocol
 
 from PIL import Image
 
 from app.core.config import get_settings
-
-Point = tuple[float, float]
-
-
-@dataclass(frozen=True)
-class Detection:
-    """A labelled region in image pixel coordinates (x right, y down)."""
-
-    label: str
-    confidence: float
-    polygon: list[Point]
-
-
-@dataclass(frozen=True)
-class RoofPrediction:
-    roofs: list[Detection]
-    obstacles: list[Detection]
-
-
-class RoofModel(Protocol):
-    name: str
-    version: str
-    is_stub: bool
-
-    def predict(self, image: Image.Image) -> RoofPrediction: ...
+from app.vision.types import Detection, Point, RoofModel, RoofPrediction
 
 
 def _rectangle(x0: float, y0: float, x1: float, y1: float) -> list[Point]:
@@ -39,7 +14,7 @@ def _rectangle(x0: float, y0: float, x1: float, y1: float) -> list[Point]:
 
 
 class StubRoofModel:
-    """Placeholder geometry so the upload → overlay pipeline works before training.
+    """Placeholder geometry so the upload → overlay pipeline works without a model file.
 
     It does not look at image content: the roof is the central 60% of the image
     and one water tank sits in its upper-left corner.
@@ -48,6 +23,9 @@ class StubRoofModel:
     name = "stub"
     version = "0.1.0"
     is_stub = True
+    limitations = (
+        "Stub model: placeholder geometry for testing the pipeline, not an analysis of this image.",
+    )
 
     def predict(self, image: Image.Image) -> RoofPrediction:
         w, h = image.size
@@ -61,7 +39,13 @@ class StubRoofModel:
         )
 
 
-_MODELS: dict[str, type] = {"stub": StubRoofModel}
+def _onnx_model() -> RoofModel:
+    from app.vision.unet import OnnxRoofModel  # imports onnxruntime only when selected
+
+    return OnnxRoofModel.from_path(get_settings().vision_model_path)
+
+
+_MODELS: dict[str, Callable[[], RoofModel]] = {"stub": StubRoofModel, "unet": _onnx_model}
 
 
 @lru_cache
