@@ -40,6 +40,8 @@ class Analysis(Base):
     corrected_measurements: Mapped[dict[str, Any] | None] = mapped_column(JsonType, nullable=True)
     # Latest solar design (panel layout and production) for this analysis.
     solar_design: Mapped[dict[str, Any] | None] = mapped_column(JsonType, nullable=True)
+    # Latest energy and financial study (configurations x scenarios).
+    energy_study: Mapped[dict[str, Any] | None] = mapped_column(JsonType, nullable=True)
 
 
 class PvgisCache(Base):

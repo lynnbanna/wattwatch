@@ -13,6 +13,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy import func, select
 
 from app.api.v1.deps import SessionDep, load_analysis
+from app.api.v1.energy import EnergyStudy
 from app.api.v1.roof_analysis import RoofAnalysisResponse
 from app.api.v1.roof_measurements import (
     MAX_REGIONS,
@@ -60,6 +61,7 @@ class AnalysisRecord(BaseModel):
     corrected: CorrectedAreas | None
     outline_hash: str
     solar_design: SolarDesign | None
+    energy_study: EnergyStudy | None
 
 
 def _record(a: Analysis) -> AnalysisRecord:
@@ -78,6 +80,7 @@ def _record(a: Analysis) -> AnalysisRecord:
         ),
         outline_hash=outline_hash(roofs, obstacles),
         solar_design=SolarDesign.model_validate(a.solar_design) if a.solar_design else None,
+        energy_study=EnergyStudy.model_validate(a.energy_study) if a.energy_study else None,
     )
 
 
