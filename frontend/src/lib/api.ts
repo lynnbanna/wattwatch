@@ -1,3 +1,4 @@
+import type { EnergyStudy } from "./energy";
 import type { SolarDesign } from "./solar";
 
 export const API_URL =
@@ -179,6 +180,7 @@ export type AnalysisRecord = {
   id: string;
   outline_hash: string;
   solar_design: SolarDesign | null;
+  energy_study: EnergyStudy | null;
   created_at: string;
   updated_at: string;
   image_url: string;

@@ -11,10 +11,12 @@ import {
   type AnalysisRecord,
 } from "@/lib/api";
 import { polygonToPoints } from "@/lib/overlay";
+import type { EnergyStudy } from "@/lib/energy";
 import type { SolarDesign } from "@/lib/solar";
 import { AnalysisResults } from "./AnalysisResults";
 import { BUTTON_SECONDARY, EditToolbar } from "./EditToolbar";
 import { RegionLayer } from "./RegionLayer";
+import { EnergyStudyPanel } from "./EnergyStudyPanel";
 import { SolarDesigner } from "./SolarDesigner";
 import { useOutlineCorrection, type SaveStatus } from "./useOutlineCorrection";
 
@@ -75,6 +77,12 @@ function Workspace({ record }: { record: AnalysisRecord }) {
   );
   const [showPanels, setShowPanels] = useState(true);
   const designStale = design !== null && editor.regions !== designRegions;
+  const [study, setStudy] = useState<EnergyStudy | null>(record.energy_study);
+  // A comparison made with a different solar estimate is out of date.
+  const studyStale =
+    study !== null &&
+    design !== null &&
+    (study.design_outline_hash !== design.outline_hash || study.kwp !== design.layout.kwp);
 
   useEffect(() => {
     if (!editing) return;
@@ -195,6 +203,15 @@ function Workspace({ record }: { record: AnalysisRecord }) {
           setShowPanels(true);
         }}
       />
+
+      {design && (
+        <EnergyStudyPanel
+          analysisId={record.id}
+          study={study}
+          designStale={designStale || studyStale}
+          onStudy={setStudy}
+        />
+      )}
 
       <div className="flex flex-wrap gap-3 border-t border-slate-200 pt-4">
         <Link href="/analyze" className={BUTTON_SECONDARY}>
