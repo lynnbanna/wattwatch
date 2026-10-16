@@ -152,3 +152,13 @@ def test_pvgis_failure_is_reported_as_unavailable(pvgis):
 def test_unknown_analysis_is_404(pvgis):
     res = _design("00000000-0000-0000-0000-000000000000")
     assert res.status_code == 404
+
+
+def test_max_panels_sizes_the_system_below_what_fits(pvgis):
+    analysis_id = _analysis()
+    _clean_roof(analysis_id)
+    d = _design(analysis_id, max_panels=10).json()
+    assert d["layout"]["panel_count"] == 10 and d["layout"]["panels_that_fit"] == 128
+    assert d["layout"]["kwp"] == pytest.approx(4.5)
+    assert any("limited to 10 of the 128" in a for a in d["assumptions"])
+    assert len(d["layout"]["panels_px"]) == 10

@@ -63,5 +63,6 @@ npm test
 - [Model decision](docs/MODEL_DECISION.md)
 - [Model metrics](docs/METRICS.md)
 - [Solar production method](docs/SOLAR_METHOD.md)
+- [Energy and financial method](docs/ENERGY_METHOD.md)
 - [API conventions](docs/API_CONVENTIONS.md)
 - [Contributing & branching](docs/CONTRIBUTING.md)

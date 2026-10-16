@@ -22,6 +22,10 @@ assumption involved. Code: `backend/app/solar/`. Tests: `backend/tests/test_sola
   keeping the one that fits the most. Real installers may fit a few more by mixing
   orientations or staggering rows.
 
+- **System size:** by default every panel that fits is placed; `max_panels` sizes the
+  system to the household instead (filling the roof often wastes solar, see
+  [ENERGY_METHOD.md](ENERGY_METHOD.md)).
+
 ## 2. Solar resource (`pvgis.py`)
 - **Source:** PVGIS 5.3 `PVcalc` (EU Joint Research Centre), SARAH3 satellite radiation and
   ERA5 weather, 2005-2023, terrain horizon shading on. Called server-side only.

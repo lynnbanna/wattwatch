@@ -70,13 +70,13 @@ Goal: users configure panels and get an energy estimate.
 ## Week 5 — Household energy and financial scenarios
 Goal: users compare realistic what-if scenarios.
 
-- [ ] Household usage profile (monthly or hourly demand)
-- [ ] User-entered utility, generator, other costs — no hardcoded tariff
-- [ ] Battery: capacity, usable capacity, round-trip efficiency, power limits
-- [ ] Self-consumption, grid/generator reliance, unmet demand on one time model
-- [ ] Upfront cost, operating cost, savings, payback
-- [ ] Optimistic / baseline / conservative assumptions
-- [ ] Tests for edge cases, units, financial calculations
+- [x] Household usage profile (monthly or hourly demand) → monthly kWh + daily pattern, hourly
+- [x] User-entered utility, generator, other costs — no hardcoded tariff
+- [x] Battery: capacity, usable capacity, round-trip efficiency, power limits
+- [x] Self-consumption, grid/generator reliance, unmet demand on one time model → 8,760-hour dispatch
+- [x] Upfront cost, operating cost, savings, payback
+- [x] Optimistic / baseline / conservative assumptions → [ENERGY_METHOD.md](ENERGY_METHOD.md)
+- [x] Tests for edge cases, units, financial calculations
 
 **Done when:** users compare at least two configurations with assumptions and outcomes.
 

@@ -1,6 +1,7 @@
 """Solar design for a saved analysis: panel layout on the usable roof and production."""
 
 from collections.abc import Iterator
+from dataclasses import replace
 from datetime import UTC, datetime
 from typing import Annotated, Literal
 
@@ -79,6 +80,8 @@ class SolarDesignRequest(BaseModel):
     panel: PanelIn = PanelIn()
     mounting: MountingIn = MountingIn()
     losses: LossesIn = LossesIn()
+    # Size the system to the household instead of filling the roof.
+    max_panels: int | None = Field(None, ge=1, le=10_000)
 
 
 # --- response ------------------------------------------------------------------
@@ -92,6 +95,7 @@ class LocationOut(BaseModel):
 
 class LayoutOut(BaseModel):
     panel_count: int
+    panels_that_fit: int
     kwp: float
     panels_px: list[list[tuple[float, float]]]
     usable_area_m2: float
@@ -185,6 +189,9 @@ def create_solar_design(
         layout = layout_panels(usable, panel, mounting, location.lat)
     except ValueError as exc:
         raise ApiError(422, "invalid_location", str(exc)) from exc
+    panels_that_fit = len(layout.panels)
+    if body.max_panels is not None and panels_that_fit > body.max_panels:
+        layout = replace(layout, panels=layout.panels[: body.max_panels])
 
     try:
         resource = fetch_resource(
@@ -229,6 +236,11 @@ def create_solar_design(
         f"Panels: {panel.power_w:g} W, {panel.length_m:g} × {panel.width_m:g} m, "
         f"{mounting.orientation}, {100 * panel.gap_m:g} cm apart.",
         mount_text,
+        *(
+            [f"System limited to {len(layout.panels)} of the {panels_that_fit} panels that fit."]
+            if len(layout.panels) < panels_that_fit
+            else []
+        ),
         f"Losses: soiling {losses.soiling:.0%}, wiring {losses.wiring:.0%}, mismatch "
         f"{losses.mismatch:.0%}, shading {losses.shading:.0%}, availability "
         f"{losses.availability:.0%}; inverter efficiency {losses.inverter_efficiency:.0%}. "
@@ -271,6 +283,7 @@ def create_solar_design(
         losses=body.losses,
         layout=LayoutOut(
             panel_count=len(layout.panels),
+            panels_that_fit=panels_that_fit,
             kwp=round(kwp, 3),
             panels_px=[to_px(p) for p in layout.panels],
             usable_area_m2=round(usable.area, 2),
