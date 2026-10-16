@@ -2,7 +2,7 @@ import type { Point, ScaleInput } from "./api";
 import { pixelDistance } from "./overlay";
 
 // Mirrors the API's limits (backend/app/measure/scale.py) for early feedback.
-export const MIN_GSD_M = 0.02;
+export const MIN_GSD_M = 0.005;
 export const MAX_GSD_M = 2.0;
 export const MIN_REFERENCE_PX = 10;
 
