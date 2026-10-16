@@ -5,15 +5,14 @@ so ids are random UUIDs and are never listed.
 """
 
 from datetime import datetime
-from typing import Annotated, Literal
-from uuid import UUID
+from typing import Literal
 
-from fastapi import APIRouter, Depends, Response
+from fastapi import APIRouter, Response
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 from sqlalchemy import func, select
-from sqlalchemy.orm import Session
 
+from app.api.v1.deps import SessionDep, load_analysis
 from app.api.v1.roof_analysis import RoofAnalysisResponse
 from app.api.v1.roof_measurements import (
     MAX_REGIONS,
@@ -21,10 +20,11 @@ from app.api.v1.roof_measurements import (
     MeasurementTotals,
     RegionAreas,
 )
+from app.api.v1.solar import SolarDesign
 from app.core.errors import ApiError
-from app.db import get_session
 from app.measure.area import measure
 from app.models import Analysis
+from app.outlines import current_outlines, outline_hash
 from app.storage import delete_image, image_path
 
 router = APIRouter(prefix="/analyses", tags=["analyses"])
@@ -58,21 +58,12 @@ class AnalysisRecord(BaseModel):
     result: RoofAnalysisResponse
     corrections: Corrections | None
     corrected: CorrectedAreas | None
-
-
-def _load(session: Session, analysis_id: str) -> Analysis:
-    try:
-        UUID(analysis_id)
-    except ValueError:
-        analysis = None
-    else:
-        analysis = session.get(Analysis, analysis_id)
-    if analysis is None:
-        raise ApiError(404, "analysis_not_found", "No analysis with this id.")
-    return analysis
+    outline_hash: str
+    solar_design: SolarDesign | None
 
 
 def _record(a: Analysis) -> AnalysisRecord:
+    roofs, obstacles, _ = current_outlines(a)
     return AnalysisRecord(
         id=a.id,
         created_at=a.created_at,
@@ -85,20 +76,19 @@ def _record(a: Analysis) -> AnalysisRecord:
             if a.corrected_measurements
             else None
         ),
+        outline_hash=outline_hash(roofs, obstacles),
+        solar_design=SolarDesign.model_validate(a.solar_design) if a.solar_design else None,
     )
-
-
-SessionDep = Annotated[Session, Depends(get_session)]
 
 
 @router.get("/{analysis_id}", response_model=AnalysisRecord)
 def get_analysis(analysis_id: str, session: SessionDep) -> AnalysisRecord:
-    return _record(_load(session, analysis_id))
+    return _record(load_analysis(session, analysis_id))
 
 
 @router.get("/{analysis_id}/image", response_class=FileResponse)
 def get_analysis_image(analysis_id: str, session: SessionDep) -> FileResponse:
-    analysis = _load(session, analysis_id)
+    analysis = load_analysis(session, analysis_id)
     path = image_path(analysis.image_key)
     if not path.is_file():
         raise ApiError(404, "image_not_found", "The stored image for this analysis is missing.")
@@ -110,7 +100,7 @@ def get_analysis_image(analysis_id: str, session: SessionDep) -> FileResponse:
 @router.put("/{analysis_id}/corrections", response_model=AnalysisRecord)
 def save_corrections(analysis_id: str, body: Corrections, session: SessionDep) -> AnalysisRecord:
     """Replace the corrected outlines; areas use the analysis's own scale and margins."""
-    analysis = _load(session, analysis_id)
+    analysis = load_analysis(session, analysis_id)
     result = analysis.result
     width, height = result["image"]["width_px"], result["image"]["height_px"]
     for region in [*body.roofs, *body.obstacles]:
@@ -153,7 +143,7 @@ def save_corrections(analysis_id: str, body: Corrections, session: SessionDep) -
 @router.delete("/{analysis_id}", status_code=204, response_class=Response)
 def delete_analysis(analysis_id: str, session: SessionDep) -> Response:
     """Delete the analysis, and its stored image unless another analysis uses the same file."""
-    analysis = _load(session, analysis_id)
+    analysis = load_analysis(session, analysis_id)
     key = analysis.image_key
     session.delete(analysis)
     session.commit()

@@ -36,6 +36,9 @@
 | GET | `/api/v1/analyses/{id}/image` | The stored image (PNG) |
 | PUT | `/api/v1/analyses/{id}/corrections` | Replace corrected outlines (`roofs`/`obstacles`: `label`, `source` = model/edited/added, `model_score`, `polygon_px`); areas are recomputed with the analysis's scale and margins. 422 `invalid_polygon` if points lie outside the image |
 | DELETE | `/api/v1/analyses/{id}` | Delete the analysis, and its image unless another analysis uses the same upload. 204 |
+| POST | `/api/v1/analyses/{id}/solar-design` | JSON: `location` (`{"city": "Beirut"}` or `{"lat", "lon"}`), optional `panel`, `mounting` (`flat_tilted`/`flush`, tilt, azimuth: 0 = south, -90 = east), `losses`. Fits panels into the usable area of the current outlines (corrected if present), fetches PVGIS, returns layout (panel polygons in pixels, kWp), monthly and annual kWh, PVGIS resource details, assumptions and limitations; saved on the analysis. 502 `solar_data_unavailable` if PVGIS fails. Method: [SOLAR_METHOD.md](SOLAR_METHOD.md) |
+
+`GET /analyses/{id}` also returns `solar_design` and the current `outline_hash`; a design whose `outline_hash` differs was made from earlier outlines.
 
 `POST /roof-analysis` saves every analysis and returns its `id`. Unknown ids return 404 `analysis_not_found`.
 

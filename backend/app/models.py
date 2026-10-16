@@ -38,6 +38,8 @@ class Analysis(Base):
     # User-corrected outlines and the areas measured from them; null until first edit.
     corrections: Mapped[dict[str, Any] | None] = mapped_column(JsonType, nullable=True)
     corrected_measurements: Mapped[dict[str, Any] | None] = mapped_column(JsonType, nullable=True)
+    # Latest solar design (panel layout and production) for this analysis.
+    solar_design: Mapped[dict[str, Any] | None] = mapped_column(JsonType, nullable=True)
 
 
 class PvgisCache(Base):
