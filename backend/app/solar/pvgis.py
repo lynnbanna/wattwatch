@@ -65,12 +65,16 @@ def parse_pvcalc(data: dict[str, Any]) -> SolarResource:
         raise PvgisError("Unexpected response from PVGIS") from exc
 
 
-def _request(
-    params: dict[str, Any], client: httpx.Client, sleep: Callable[[float], None]
+def request_json(
+    params: dict[str, Any],
+    client: httpx.Client,
+    sleep: Callable[[float], None] = time.sleep,
+    url: str = PVGIS_URL,
 ) -> dict[str, Any]:
+    """GET a PVGIS endpoint with retries on rate limiting and server errors."""
     for attempt in range(RETRIES):
         try:
-            response = client.get(PVGIS_URL, params=params, timeout=TIMEOUT_S)
+            response = client.get(url, params=params, timeout=TIMEOUT_S)
         except httpx.HTTPError as exc:
             if attempt == RETRIES - 1:
                 raise PvgisError("PVGIS could not be reached") from exc
@@ -116,7 +120,7 @@ def fetch_resource(
     owns_client = client is None
     client = client or httpx.Client()
     try:
-        data = _request(params, client, sleep)
+        data = request_json(params, client, sleep)
     finally:
         if owns_client:
             client.close()
