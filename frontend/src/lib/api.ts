@@ -1,3 +1,5 @@
+import type { SolarDesign } from "./solar";
+
 export const API_URL =
   process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") ?? "http://localhost:8000";
 
@@ -175,6 +177,8 @@ export type Corrections = { roofs: SavedRegion[]; obstacles: SavedRegion[] };
 
 export type AnalysisRecord = {
   id: string;
+  outline_hash: string;
+  solar_design: SolarDesign | null;
   created_at: string;
   updated_at: string;
   image_url: string;

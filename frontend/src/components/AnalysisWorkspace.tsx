@@ -10,9 +10,12 @@ import {
   NotFoundError,
   type AnalysisRecord,
 } from "@/lib/api";
+import { polygonToPoints } from "@/lib/overlay";
+import type { SolarDesign } from "@/lib/solar";
 import { AnalysisResults } from "./AnalysisResults";
 import { BUTTON_SECONDARY, EditToolbar } from "./EditToolbar";
 import { RegionLayer } from "./RegionLayer";
+import { SolarDesigner } from "./SolarDesigner";
 import { useOutlineCorrection, type SaveStatus } from "./useOutlineCorrection";
 
 type Load =
@@ -65,6 +68,13 @@ function Workspace({ record }: { record: AnalysisRecord }) {
   const [editing, setEditing] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const { width_px: width, height_px: height } = record.result.image;
+  const [design, setDesign] = useState<SolarDesign | null>(record.solar_design);
+  // Outlines the current design was made from; null when it was made from older ones.
+  const [designRegions, setDesignRegions] = useState(() =>
+    record.solar_design?.outline_hash === record.outline_hash ? editor.regions : null,
+  );
+  const [showPanels, setShowPanels] = useState(true);
+  const designStale = design !== null && editor.regions !== designRegions;
 
   useEffect(() => {
     if (!editing) return;
@@ -111,6 +121,26 @@ function Workspace({ record }: { record: AnalysisRecord }) {
           className="block h-auto w-full select-none"
           draggable={false}
         />
+        {design && showPanels && !designStale && (
+          <svg
+            viewBox={`0 0 ${width} ${height}`}
+            preserveAspectRatio="none"
+            className="pointer-events-none absolute inset-0 h-full w-full"
+            aria-hidden="true"
+          >
+            {design.layout.panels_px.map((p, i) => (
+              <polygon
+                key={i}
+                points={polygonToPoints(p)}
+                fill="#2a78d6"
+                fillOpacity={0.55}
+                stroke="#ffffff"
+                strokeWidth={1}
+                vectorEffect="non-scaling-stroke"
+              />
+            ))}
+          </svg>
+        )}
         <RegionLayer
           width={width}
           height={height}
@@ -140,7 +170,31 @@ function Workspace({ record }: { record: AnalysisRecord }) {
         </p>
       )}
 
+      {design && (
+        <label className="flex items-center gap-2 text-sm text-slate-600">
+          <input
+            type="checkbox"
+            checked={showPanels}
+            onChange={(e) => setShowPanels(e.target.checked)}
+          />
+          Show solar panels on the image
+          {designStale && " (hidden: outlines changed since the estimate)"}
+        </label>
+      )}
+
       <AnalysisResults view={correction.view} />
+
+      <SolarDesigner
+        analysisId={record.id}
+        design={design}
+        stale={designStale}
+        outlinesSaving={correction.status === "saving"}
+        onDesign={(d) => {
+          setDesign(d);
+          setDesignRegions(editor.regions);
+          setShowPanels(true);
+        }}
+      />
 
       <div className="flex flex-wrap gap-3 border-t border-slate-200 pt-4">
         <Link href="/analyze" className={BUTTON_SECONDARY}>
